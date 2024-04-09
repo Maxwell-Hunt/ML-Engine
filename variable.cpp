@@ -1,11 +1,12 @@
 #include "variable.h"
 
-Variable::Variable(float value) : value{value}, partial{0} {}
+Variable::Variable(float value) : value{value} {}
 
 float Variable::getValue() const {
     return value;
 }
 
-float Variable::getPartial() const {
-    return partial;
+float Variable::getPartial(const Expression& x) const {
+    if(&x == this) return 1;
+    return 0;
 }

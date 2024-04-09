@@ -6,12 +6,13 @@
 class Variable : public Expression {
 public:
     Variable(float value);
+    virtual ~Variable() {}
 
     virtual float getValue() const override;
-    virtual float getPartial() const override;
+    virtual float getPartial(const Expression& x) const override;
 
 private:
-    float value, partial;
+    float value;
 };
 
 #endif

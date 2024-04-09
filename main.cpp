@@ -1,5 +1,14 @@
 #include <iostream>
+#include "operations.h"
+#include "variable.h"
 
 int main() {
-    std::cout << "This is going to be a great machine learning project";
+    Variable v1(5);
+    Variable v2(4);
+
+    Plus p = v1 + v2;
+    Multiply m = v1 * v1;
+
+    std::cout << m.getValue() << std::endl;
+    std::cout << m.getPartial(v1) << std::endl;
 }

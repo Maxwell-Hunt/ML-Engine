@@ -1,6 +1,14 @@
 #include "context.h"
 #include <iostream>
 
+const Expression& MSE(float x1, float y1, float x2, float y2, const Expression& w, const Expression& b) {
+    Context& context = w.getContext();
+    const Expression& se1 = context.square(w * x1 + b - y1);
+    const Expression& se2 = context.square(w * x2 + b - y2);
+
+    return (se1 + se2) / 2;
+}
+
 int main() {
     float learningRate = 0.05;
 
@@ -13,18 +21,13 @@ int main() {
     float fb = 0;
 
     for(std::size_t i = 0;i < 30;i++) {
+        
         Context context;
         const Expression& w = context.createVariable(fw);
         const Expression& b = context.createVariable(fb);
 
-        const Expression& error1 = (w * x1 + b - y1);
-        const Expression& error2 = (w * x2 + b - y2);
-
-        const Expression& se1 = error1 * error1;
-        const Expression& se2 = error2 * error2;
-
-        const Expression& mse = (se1 + se2) / 2;
-
+        const Expression& mse = MSE(x1, y1, x2, y2, w, b);
+        
         std::cout << "MSE: " << mse.getValue() << " w: " << w.getValue() << " b: " << b.getValue() << std::endl;
 
         float dw = mse.getPartial(w);

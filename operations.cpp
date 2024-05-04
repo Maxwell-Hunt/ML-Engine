@@ -4,6 +4,9 @@
 BinaryOperation::BinaryOperation(const Expression& e1, const Expression& e2, Context& context) :
     Expression{context}, e1{e1}, e2{e2} {}
 
+UnaryOperation::UnaryOperation(const Expression& subexpr, Context& context) :
+    Expression{context}, subexpr{subexpr} {}
+
 Addition::Addition(const Expression& e1, const Expression& e2, Context& context) :
     BinaryOperation{e1, e2, context} {}
 
@@ -50,6 +53,17 @@ float Division::getPartial(const Expression& other) const {
     float e1Partial = e1.getPartial(other);
     float e2Partial = e2.getPartial(other);
     return (e1Partial* e2Value - e2Partial * e1Value) / (e2Value * e2Value);
+}
+
+Square::Square(const Expression& subexpr, Context& context) : UnaryOperation{subexpr, context} {}
+
+float Square::getValue() const {
+    float x = subexpr.getValue();
+    return x * x;
+}
+
+float Square::getPartial(const Expression& other) const {
+    return 2 * subexpr.getValue() * subexpr.getPartial(other);
 }
 
 const Expression& operator+(const Expression& e1, const Expression& e2) {

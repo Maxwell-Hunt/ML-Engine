@@ -27,7 +27,9 @@ public:
     const Expression& div(const Expression& e1, const Expression& e2);
     const Expression& div(float val, const Expression& e2);
     const Expression& div(const Expression& e1, float val);
-    
+
+    const Expression& square(const Expression& ex);
+
 private:
     void checkExpressions(const Expression& e1, const Expression& e2) const;
 

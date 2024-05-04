@@ -79,6 +79,12 @@ const Expression& Context::div(const Expression& e1, float val) {
     return div(e1, e2);
 }
 
+const Expression& Context::square(const Expression& ex) {
+    Square* sq = new Square(ex, *this);
+    expressions.insert(sq);
+    return *sq;
+}
+
 void Context::checkExpressions(const Expression& e1, const Expression& e2) const {
     if(!(expressions.count(&e1) && expressions.count(&e2))) {
         throw std::runtime_error("WHY ARE YOU DOING THIS???");

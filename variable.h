@@ -4,15 +4,13 @@
 #include "expression.h"
 
 class Variable : public Expression {
+friend class Context;
 public:
-    Variable(float value);
-    virtual ~Variable() {}
-
     virtual float getValue() const override;
-    virtual float getPartial(const Expression& x) const override;
-
+    virtual float getPartial(const Expression& other) const override;
 private:
-    float value;
+    Variable(float val, Context& context);
+    float val;
 };
 
 #endif

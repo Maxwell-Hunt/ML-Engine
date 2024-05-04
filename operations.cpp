@@ -1,69 +1,101 @@
 #include "operations.h"
+#include "context.h"
 
-BinaryOperation::BinaryOperation(const Expression& ex1, const Expression& ex2) : ex1{ex1}, ex2{ex2} {}
+BinaryOperation::BinaryOperation(const Expression& e1, const Expression& e2, Context& context) :
+    Expression{context}, e1{e1}, e2{e2} {}
 
-Plus::Plus(const Expression& ex1, const Expression& ex2) : BinaryOperation(ex1, ex2) {}
+Addition::Addition(const Expression& e1, const Expression& e2, Context& context) :
+    BinaryOperation{e1, e2, context} {}
 
-float Plus::getValue() const {
-    return ex1.getValue() + ex2.getValue();
+float Addition::getValue() const {
+    return e1.getValue() + e2.getValue();
 }
 
-float Plus::getPartial(const Expression& x) const {
-    return ex1.getPartial(x) + ex2.getPartial(x);
+float Addition::getPartial(const Expression& other) const {
+    return e1.getPartial(other) + e2.getPartial(other);
 }
 
-PlusConst::PlusConst(const Expression& ex1, float other) : ex1{ex1}, other{other} {}
-PlusConst::PlusConst(float other, const Expression& ex1) : ex1{ex1}, other{other} {}
+Subtraction::Subtraction(const Expression& e1, const Expression& e2, Context& context) :
+    BinaryOperation{e1, e2, context} {}
 
-float PlusConst::getValue() const {
-    return ex1.getValue() + other;
+float Subtraction::getValue() const {
+    return e1.getValue() - e2.getValue();
 }
 
-float PlusConst::getPartial(const Expression& x) const {
-    return ex1.getPartial(x);
+float Subtraction::getPartial(const Expression& other) const {
+    return e1.getPartial(other) - e2.getPartial(other);
 }
 
-Multiply::Multiply(const Expression& ex1, const Expression& ex2) : BinaryOperation(ex1, ex2) {}
+Multiplication::Multiplication(const Expression& e1, const Expression& e2, Context& context) :
+    BinaryOperation{e1, e2, context} {}
 
-float Multiply::getValue() const {
-    return ex1.getValue() * ex2.getValue();
+float Multiplication::getValue() const {
+    return e1.getValue() * e2.getValue();
 }
 
-float Multiply::getPartial(const Expression& x) const {
-    return ex1.getValue() * ex2.getPartial(x) + ex2.getValue() * ex1.getPartial(x);
+float Multiplication::getPartial(const Expression& other) const {
+    return e1.getPartial(other) * e2.getValue() + e1.getValue() * e2.getPartial(other);
 }
 
-MultiplyConst::MultiplyConst(const Expression& ex1, float other) : ex1{ex1}, other{other} {}
-MultiplyConst::MultiplyConst(float other, const Expression& ex1) : ex1{ex1}, other{other} {}
+Division::Division(const Expression& e1, const Expression& e2, Context& context) :
+    BinaryOperation{e1, e2, context} {}
 
-float MultiplyConst::getValue() const {
-    return ex1.getValue() * other;
+float Division::getValue() const {
+    return e1.getValue() / e2.getValue();
 }
 
-float MultiplyConst::getPartial(const Expression& x) const {
-    return ex1.getPartial(x) * other;
+float Division::getPartial(const Expression& other) const {
+    float e1Value = e1.getValue();
+    float e2Value = e2.getValue();
+    float e1Partial = e1.getPartial(other);
+    float e2Partial = e2.getPartial(other);
+    return (e1Partial* e2Value - e2Partial * e1Value) / (e2Value * e2Value);
 }
 
-Plus operator+(const Expression& a, const Expression& b) {
-    return Plus(a, b);
+const Expression& operator+(const Expression& e1, const Expression& e2) {
+    return e1.getContext().add(e1, e2);
 }
 
-PlusConst operator+(const Expression& a, float other) {
-    return PlusConst(a, other);
+const Expression& operator+(const Expression& e1, float val) {
+    return e1.getContext().add(e1, val);
 }
 
-PlusConst operator+(float other, const Expression& a) {
-    return PlusConst(a, other);
+const Expression& operator+(float val, const Expression& e2) {
+    return e2.getContext().add(val, e2);
+} 
+
+const Expression& operator-(const Expression& e1, const Expression& e2) {
+    return e1.getContext().sub(e1, e2);
 }
 
-Multiply operator*(const Expression& a, const Expression& b) {
-    return Multiply(a, b);
+const Expression& operator-(const Expression& e1, float val) {
+    return e1.getContext().sub(e1, val);
 }
 
-MultiplyConst operator*(float other, const Expression& a) {
-    return MultiplyConst(a, other);
+const Expression& operator-(float val, const Expression& e2) {
+    return e2.getContext().sub(val, e2);
+} 
+
+const Expression& operator*(const Expression& e1, const Expression& e2) {
+    return e1.getContext().mult(e1, e2);
 }
 
-MultiplyConst operator*(const Expression& a, float other) {
-    return MultiplyConst(a, other);
+const Expression& operator*(const Expression& e1, float val) {
+    return e1.getContext().mult(e1, val);
+}
+
+const Expression& operator*(float val, const Expression& e2) {
+    return e2.getContext().mult(val, e2);
+}
+
+const Expression& operator/(const Expression& e1, const Expression& e2) {
+    return e1.getContext().div(e1, e2);
+}
+
+const Expression& operator/(const Expression& e1, float val) {
+    return e1.getContext().div(e1, val);
+}
+
+const Expression& operator/(float val, const Expression& e2) {
+    return e2.getContext().div(val, e2);
 }

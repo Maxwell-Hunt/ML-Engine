@@ -5,63 +5,64 @@
 
 class BinaryOperation : public Expression {
 protected:
-    BinaryOperation(const Expression& ex1, const Expression& ex2);
-    virtual ~BinaryOperation() override {}
-    const Expression& ex1;
-    const Expression& ex2;
+    BinaryOperation(const Expression& e1, const Expression& e2, Context& context);
+    const Expression& e1;
+    const Expression& e2;
 };
 
-class Plus : public BinaryOperation {
+class Addition : public BinaryOperation {
+friend class Context;
 public:
-    Plus(const Expression& ex1, const Expression& ex2);
-    virtual ~Plus() override {}
-
     virtual float getValue() const override;
-    virtual float getPartial(const Expression& x) const override;
-};
 
-class PlusConst : public Expression {
-public:
-    PlusConst(const Expression& ex1, float other);
-    PlusConst(float other, const Expression& ex1);
-    virtual ~PlusConst() override {}
+    virtual float getPartial(const Expression& other) const override;
 
-    virtual float getValue() const override;
-    virtual float getPartial(const Expression& x) const override;
 private:
-    const Expression& ex1;
-    float other;
+    Addition(const Expression& e1, const Expression& e2, Context& context);
 };
 
-class Multiply : public BinaryOperation {
+class Subtraction : public BinaryOperation {
+friend class Context;
 public:
-    Multiply(const Expression& ex1, const Expression& ex2);
-    virtual ~Multiply() override {}
-
     virtual float getValue() const override;
-    virtual float getPartial(const Expression& x) const override;
-};
 
-class MultiplyConst : public Expression {
-public:
-    MultiplyConst(const Expression& ex1, float other);
-    MultiplyConst(float other, const Expression& ex1);
-    virtual ~MultiplyConst() override {}
-
-    virtual float getValue() const override;
-    virtual float getPartial(const Expression& x) const override;
+    virtual float getPartial(const Expression& other) const override;
 private:
-    const Expression& ex1;
-    float other;
+    Subtraction(const Expression& e1, const Expression& e2, Context& context);
 };
 
-Plus operator+(const Expression& a, const Expression& b);
-PlusConst operator+(const Expression& a, float other);
-PlusConst operator+(float other, const Expression& a);
+class Multiplication : public BinaryOperation {
+friend class Context;
+public:
+    virtual float getValue() const override;
+    virtual float getPartial(const Expression& other) const override;
+private:
+    Multiplication(const Expression& e1, const Expression& e2, Context& context);
+};
 
-Multiply operator*(const Expression& a, const Expression& b);
-MultiplyConst operator*(const Expression& a, float other);
-MultiplyConst operator*(float other, const Expression& a);
+class Division : public BinaryOperation {
+friend class Context;
+public:
+    virtual float getValue() const override;
+    virtual float getPartial(const Expression& other) const override;
+private:
+    Division(const Expression& e1, const Expression& e2, Context& context);
+};
 
+const Expression& operator+(const Expression& e1, const Expression& e2);
+const Expression& operator+(const Expression& e1, float val);
+const Expression& operator+(float val, const Expression& e2);
+
+const Expression& operator-(const Expression& e1, const Expression& e2);
+const Expression& operator-(const Expression& e1, float val);
+const Expression& operator-(float val, const Expression& e2);
+
+const Expression& operator*(const Expression& e1, const Expression& e2);
+const Expression& operator*(const Expression& e1, float val);
+const Expression& operator*(float val, const Expression& e2);
+
+const Expression& operator/(const Expression& e1, const Expression& e2);
+const Expression& operator/(const Expression& e1, float val);
+const Expression& operator/(float val, const Expression& e2);
 
 #endif

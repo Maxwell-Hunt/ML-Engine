@@ -19,12 +19,12 @@ Expression Context::add(const Expression& e1, const Expression& e2) {
 }
 
 Expression Context::add(float val, const Expression& e2) {
-    const Expression& e1 = createVariable(val);
+    Expression e1 = createVariable(val);
     return add(e1, e2);
 }
 
 Expression Context::add(const Expression& e1, float val) {
-    const Expression& e2 = createVariable(val);
+    Expression e2 = createVariable(val);
     return add(e1, e2);
 }
 
@@ -36,12 +36,12 @@ Expression Context::sub(const Expression& e1, const Expression& e2) {
 }
 
 Expression Context::sub(float val, const Expression& e2) {
-    const Expression& e1 = createVariable(val);
+    Expression e1 = createVariable(val);
     return sub(e1, e2);
 }
 
 Expression Context::sub(const Expression& e1, float val) {
-    const Expression& e2 = createVariable(val);
+    Expression e2 = createVariable(val);
     return sub(e1, e2);
 }
 
@@ -53,12 +53,12 @@ Expression Context::mult(const Expression& e1, const Expression& e2) {
 }
 
 Expression Context::mult(float val, const Expression& e2) {
-    const Expression& e1 = createVariable(val);
+    Expression e1 = createVariable(val);
     return mult(e1, e2);
 }
 
 Expression Context::mult(const Expression& e1, float val) {
-    const Expression& e2 = createVariable(val);
+    Expression e2 = createVariable(val);
     return mult(e1, e2);
 }
 
@@ -70,12 +70,12 @@ Expression Context::div(const Expression& e1, const Expression& e2) {
 }
 
 Expression Context::div(float val, const Expression& e2) {
-    const Expression& e1 = createVariable(val);
+    Expression e1 = createVariable(val);
     return div(e1, e2);
 }
 
 Expression Context::div(const Expression& e1, float val) {
-    const Expression& e2 = createVariable(val);
+    Expression e2 = createVariable(val);
     return div(e1, e2);
 }
 

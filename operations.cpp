@@ -66,50 +66,50 @@ float Square::getPartial(const Expression& other) const {
     return 2 * subexpr.getValue() * subexpr.getPartial(other);
 }
 
-const Expression& operator+(const Expression& e1, const Expression& e2) {
+Expression operator+(const Expression& e1, const Expression& e2) {
     return e1.getContext().add(e1, e2);
 }
 
-const Expression& operator+(const Expression& e1, float val) {
+Expression operator+(const Expression& e1, float val) {
     return e1.getContext().add(e1, val);
 }
 
-const Expression& operator+(float val, const Expression& e2) {
+Expression operator+(float val, const Expression& e2) {
     return e2.getContext().add(val, e2);
 } 
 
-const Expression& operator-(const Expression& e1, const Expression& e2) {
+Expression operator-(const Expression& e1, const Expression& e2) {
     return e1.getContext().sub(e1, e2);
 }
 
-const Expression& operator-(const Expression& e1, float val) {
+Expression operator-(const Expression& e1, float val) {
     return e1.getContext().sub(e1, val);
 }
 
-const Expression& operator-(float val, const Expression& e2) {
+Expression operator-(float val, const Expression& e2) {
     return e2.getContext().sub(val, e2);
 } 
 
-const Expression& operator*(const Expression& e1, const Expression& e2) {
+Expression operator*(const Expression& e1, const Expression& e2) {
     return e1.getContext().mult(e1, e2);
 }
 
-const Expression& operator*(const Expression& e1, float val) {
+Expression operator*(const Expression& e1, float val) {
     return e1.getContext().mult(e1, val);
 }
 
-const Expression& operator*(float val, const Expression& e2) {
+Expression operator*(float val, const Expression& e2) {
     return e2.getContext().mult(val, e2);
 }
 
-const Expression& operator/(const Expression& e1, const Expression& e2) {
+Expression operator/(const Expression& e1, const Expression& e2) {
     return e1.getContext().div(e1, e2);
 }
 
-const Expression& operator/(const Expression& e1, float val) {
+Expression operator/(const Expression& e1, float val) {
     return e1.getContext().div(e1, val);
 }
 
-const Expression& operator/(float val, const Expression& e2) {
+Expression operator/(float val, const Expression& e2) {
     return e2.getContext().div(val, e2);
 }

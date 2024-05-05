@@ -1,7 +1,7 @@
 #include "context.h"
 #include <iostream>
 
-const Expression& MSE(float x1, float y1, float x2, float y2, const Expression& w, const Expression& b) {
+Expression MSE(float x1, float y1, float x2, float y2, const Expression& w, const Expression& b) {
     Context& context = w.getContext();
     const Expression& se1 = context.square(w * x1 + b - y1);
     const Expression& se2 = context.square(w * x2 + b - y2);
@@ -23,10 +23,10 @@ int main() {
     for(std::size_t i = 0;i < 30;i++) {
         
         Context context;
-        const Expression& w = context.createVariable(fw);
-        const Expression& b = context.createVariable(fb);
+        Expression w = context.createVariable(fw);
+        Expression b = context.createVariable(fb);
 
-        const Expression& mse = MSE(x1, y1, x2, y2, w, b);
+        Expression mse = MSE(x1, y1, x2, y2, w, b);
         
         std::cout << "MSE: " << mse.getValue() << " w: " << w.getValue() << " b: " << b.getValue() << std::endl;
 

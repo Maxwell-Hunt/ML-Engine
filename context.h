@@ -10,30 +10,30 @@ class Context {
 public:
     ~Context();
 
-    const Expression& createVariable(float val);
+    Expression createVariable(float val);
 
-    const Expression& add(const Expression& e1, const Expression& e2);
-    const Expression& add(float val, const Expression& e2);
-    const Expression& add(const Expression& e1, float val);
+    Expression add(const Expression& e1, const Expression& e2);
+    Expression add(float val, const Expression& e2);
+    Expression add(const Expression& e1, float val);
 
-    const Expression& sub(const Expression& e1, const Expression& e2);
-    const Expression& sub(float val, const Expression& e2);
-    const Expression& sub(const Expression& e1, float val);
+    Expression sub(const Expression& e1, const Expression& e2);
+    Expression sub(float val, const Expression& e2);
+    Expression sub(const Expression& e1, float val);
 
-    const Expression& mult(const Expression& e1, const Expression& e2);
-    const Expression& mult(float val, const Expression& e2);
-    const Expression& mult(const Expression& e1, float val);
+    Expression mult(const Expression& e1, const Expression& e2);
+    Expression mult(float val, const Expression& e2);
+    Expression mult(const Expression& e1, float val);
 
-    const Expression& div(const Expression& e1, const Expression& e2);
-    const Expression& div(float val, const Expression& e2);
-    const Expression& div(const Expression& e1, float val);
+    Expression div(const Expression& e1, const Expression& e2);
+    Expression div(float val, const Expression& e2);
+    Expression div(const Expression& e1, float val);
 
-    const Expression& square(const Expression& ex);
+    Expression square(const Expression& ex);
 
 private:
     void checkExpressions(const Expression& e1, const Expression& e2) const;
 
-    std::unordered_set<const Expression*> expressions;
+    std::unordered_set<const Internal::Expression*> expressions;
 };
 
 #endif

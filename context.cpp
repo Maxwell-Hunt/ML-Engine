@@ -1,92 +1,92 @@
 #include "context.h"
 
 Context::~Context() {
-        for(const Expression* ex : expressions) delete ex;
+        for(const Internal::Expression* ex : expressions) delete ex;
 }
 
-const Expression& Context::createVariable(float val) {
+Expression Context::createVariable(float val) {
     Variable* v = new Variable(val, *this);
     expressions.insert(v);
     return *v;
 }
 
-const Expression& Context::add(const Expression& e1, const Expression& e2) {
+Expression Context::add(const Expression& e1, const Expression& e2) {
     checkExpressions(e1, e2);
 
-    Addition* sum = new Addition(e1, e2, *this);
+    Addition* sum = new Addition(e1.data(), e2.data(), *this);
     expressions.insert(sum);
-    return *sum;
+    return Expression(*sum);
 }
 
-const Expression& Context::add(float val, const Expression& e2) {
+Expression Context::add(float val, const Expression& e2) {
     const Expression& e1 = createVariable(val);
     return add(e1, e2);
 }
 
-const Expression& Context::add(const Expression& e1, float val) {
+Expression Context::add(const Expression& e1, float val) {
     const Expression& e2 = createVariable(val);
     return add(e1, e2);
 }
 
-const Expression& Context::sub(const Expression& e1, const Expression& e2) {
+Expression Context::sub(const Expression& e1, const Expression& e2) {
     checkExpressions(e1, e2);
-    Subtraction* diff = new Subtraction(e1, e2, *this);
+    Subtraction* diff = new Subtraction(e1.data(), e2.data(), *this);
     expressions.insert(diff);
-    return *diff;
+    return Expression(*diff);
 }
 
-const Expression& Context::sub(float val, const Expression& e2) {
+Expression Context::sub(float val, const Expression& e2) {
     const Expression& e1 = createVariable(val);
     return sub(e1, e2);
 }
 
-const Expression& Context::sub(const Expression& e1, float val) {
+Expression Context::sub(const Expression& e1, float val) {
     const Expression& e2 = createVariable(val);
     return sub(e1, e2);
 }
 
-const Expression& Context::mult(const Expression& e1, const Expression& e2) {
+Expression Context::mult(const Expression& e1, const Expression& e2) {
     checkExpressions(e1, e2);
-    Multiplication* prod = new Multiplication(e1, e2, *this);
+    Multiplication* prod = new Multiplication(e1.data(), e2.data(), *this);
     expressions.insert(prod);
-    return *prod;
+    return Expression(*prod);
 }
 
-const Expression& Context::mult(float val, const Expression& e2) {
+Expression Context::mult(float val, const Expression& e2) {
     const Expression& e1 = createVariable(val);
     return mult(e1, e2);
 }
 
-const Expression& Context::mult(const Expression& e1, float val) {
+Expression Context::mult(const Expression& e1, float val) {
     const Expression& e2 = createVariable(val);
     return mult(e1, e2);
 }
 
-const Expression& Context::div(const Expression& e1, const Expression& e2) {
+Expression Context::div(const Expression& e1, const Expression& e2) {
     checkExpressions(e1, e2);
-    Division* quotient = new Division(e1, e2, *this);
+    Division* quotient = new Division(e1.data(), e2.data(), *this);
     expressions.insert(quotient);
-    return *quotient;
+    return Expression(*quotient);
 }
 
-const Expression& Context::div(float val, const Expression& e2) {
+Expression Context::div(float val, const Expression& e2) {
     const Expression& e1 = createVariable(val);
     return div(e1, e2);
 }
 
-const Expression& Context::div(const Expression& e1, float val) {
+Expression Context::div(const Expression& e1, float val) {
     const Expression& e2 = createVariable(val);
     return div(e1, e2);
 }
 
-const Expression& Context::square(const Expression& ex) {
-    Square* sq = new Square(ex, *this);
+Expression Context::square(const Expression& ex) {
+    Square* sq = new Square(ex.data(), *this);
     expressions.insert(sq);
-    return *sq;
+    return Expression(*sq);
 }
 
 void Context::checkExpressions(const Expression& e1, const Expression& e2) const {
-    if(!(expressions.count(&e1) && expressions.count(&e2))) {
+    if(!(expressions.count(&e1.data()) && expressions.count(&e2.data()))) {
         throw std::runtime_error("WHY ARE YOU DOING THIS???");
     }
 }

@@ -3,17 +3,17 @@
 
 #include "expression.h"
 
-class BinaryOperation : public Expression {
+class BinaryOperation : public Internal::Expression {
 protected:
-    BinaryOperation(const Expression& e1, const Expression& e2, Context& context);
-    const Expression& e1;
-    const Expression& e2;
+    BinaryOperation(const Internal::Expression& e1, const Internal::Expression& e2, Context& context);
+    const Internal::Expression& e1;
+    const Internal::Expression& e2;
 };
 
-class UnaryOperation : public Expression {
+class UnaryOperation : public Internal::Expression {
 protected:
-    UnaryOperation(const Expression& subexpr, Context& context);
-    const Expression& subexpr;
+    UnaryOperation(const Internal::Expression& subexpr, Context& context);
+    const Internal::Expression& subexpr;
 };
 
 class Addition : public BinaryOperation {
@@ -21,10 +21,10 @@ friend class Context;
 public:
     virtual float getValue() const override;
 
-    virtual float getPartial(const Expression& other) const override;
+    virtual float getPartial(const Internal::Expression& other) const override;
 
 private:
-    Addition(const Expression& e1, const Expression& e2, Context& context);
+    Addition(const Internal::Expression& e1, const Internal::Expression& e2, Context& context);
 };
 
 class Subtraction : public BinaryOperation {
@@ -32,52 +32,52 @@ friend class Context;
 public:
     virtual float getValue() const override;
 
-    virtual float getPartial(const Expression& other) const override;
+    virtual float getPartial(const Internal::Expression& other) const override;
 private:
-    Subtraction(const Expression& e1, const Expression& e2, Context& context);
+    Subtraction(const Internal::Expression& e1, const Internal::Expression& e2, Context& context);
 };
 
 class Multiplication : public BinaryOperation {
 friend class Context;
 public:
     virtual float getValue() const override;
-    virtual float getPartial(const Expression& other) const override;
+    virtual float getPartial(const Internal::Expression& other) const override;
 private:
-    Multiplication(const Expression& e1, const Expression& e2, Context& context);
+    Multiplication(const Internal::Expression& e1, const Internal::Expression& e2, Context& context);
 };
 
 class Division : public BinaryOperation {
 friend class Context;
 public:
     virtual float getValue() const override;
-    virtual float getPartial(const Expression& other) const override;
+    virtual float getPartial(const Internal::Expression& other) const override;
 private:
-    Division(const Expression& e1, const Expression& e2, Context& context);
+    Division(const Internal::Expression& e1, const Internal::Expression& e2, Context& context);
 };
 
 class Square : public UnaryOperation {
 friend class Context;
 public:
     virtual float getValue() const override;
-    virtual float getPartial(const Expression& other) const override;
+    virtual float getPartial(const Internal::Expression& other) const override;
 private:
-    Square(const Expression& subexpr, Context& context);
+    Square(const Internal::Expression& subexpr, Context& context);
 };
 
-const Expression& operator+(const Expression& e1, const Expression& e2);
-const Expression& operator+(const Expression& e1, float val);
-const Expression& operator+(float val, const Expression& e2);
+Expression operator+(const Expression& e1, const Expression& e2);
+Expression operator+(const Expression& e1, float val);
+Expression operator+(float val, const Expression& e2);
 
-const Expression& operator-(const Expression& e1, const Expression& e2);
-const Expression& operator-(const Expression& e1, float val);
-const Expression& operator-(float val, const Expression& e2);
+Expression operator-(const Expression& e1, const Expression& e2);
+Expression operator-(const Expression& e1, float val);
+Expression operator-(float val, const Expression& e2);
 
-const Expression& operator*(const Expression& e1, const Expression& e2);
-const Expression& operator*(const Expression& e1, float val);
-const Expression& operator*(float val, const Expression& e2);
+Expression operator*(const Expression& e1, const Expression& e2);
+Expression operator*(const Expression& e1, float val);
+Expression operator*(float val, const Expression& e2);
 
-const Expression& operator/(const Expression& e1, const Expression& e2);
-const Expression& operator/(const Expression& e1, float val);
-const Expression& operator/(float val, const Expression& e2);
+Expression operator/(const Expression& e1, const Expression& e2);
+Expression operator/(const Expression& e1, float val);
+Expression operator/(float val, const Expression& e2);
 
 #endif

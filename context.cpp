@@ -7,7 +7,7 @@ Context::~Context() {
 Expression Context::createVariable(float val) {
     Variable* v = new Variable(val, *this);
     expressions.insert(v);
-    return *v;
+    return Expression(*v);
 }
 
 Expression Context::add(const Expression& e1, const Expression& e2) {

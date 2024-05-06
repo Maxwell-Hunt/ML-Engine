@@ -19,16 +19,17 @@ public:
 
 class Expression {
 public:
-    Expression(const Internal::Expression& expr) : expr{expr} {}
-    Context& getContext() const { return expr.getContext(); }
+    Expression() : expr{nullptr} {}
+    Expression(const Internal::Expression& expr) : expr{&expr} {}
+    Context& getContext() const { return expr->getContext(); }
 
-    float getValue() const { return expr.getValue(); }
-    float getPartial(const Expression& other) const { return expr.getPartial(other.data()); }
+    float getValue() const { return expr->getValue(); }
+    float getPartial(const Expression& other) const { return expr->getPartial(other.data()); }
 
-    const Internal::Expression& data() const { return expr; }
+    const Internal::Expression& data() const { return *expr; }
 
 private:
-    const Internal::Expression& expr;
+    const Internal::Expression* expr;
 };
 
 #endif

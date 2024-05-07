@@ -3,6 +3,7 @@
 
 #include "variable.h"
 #include "operations.h"
+#include "vector.h"
 #include <unordered_set>
 #include <stdexcept>
 
@@ -11,6 +12,7 @@ public:
     ~Context();
 
     Expression createVariable(float val);
+    Vector createVector(std::size_t size, bool isZero);
 
     Expression add(const Expression& e1, const Expression& e2);
     Expression add(float val, const Expression& e2);

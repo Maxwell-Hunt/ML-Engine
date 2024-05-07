@@ -10,6 +10,10 @@ Expression Context::createVariable(float val) {
     return Expression(*v);
 }
 
+Vector Context::createVector(std::size_t size, bool isZero) {
+    return Vector(size, isZero, *this);
+}
+
 Expression Context::add(const Expression& e1, const Expression& e2) {
     checkExpressions(e1, e2);
 

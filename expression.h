@@ -21,6 +21,13 @@ class Expression {
 public:
     Expression() : expr{nullptr} {}
     Expression(const Internal::Expression& expr) : expr{&expr} {}
+
+    Expression(const Expression& expr) = delete;
+    Expression(Expression&& expr) : expr{(expr.expr)} {}
+
+    Expression& operator=(const Expression&) = delete;
+    Expression& operator=(Expression&& expr) { this->expr = expr.expr; return *this; }
+
     Context& getContext() const { return expr->getContext(); }
 
     float getValue() const { return expr->getValue(); }

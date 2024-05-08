@@ -93,43 +93,25 @@ Expression Context::square(const Expression& ex) {
 
 Vector Context::add(const Vector& a, const Vector& b) {
     checkVectors(a, b);
-    std::vector<Expression> v;
-    for(std::size_t i = 0;i < a.getSize();i++) {
-        v.push_back(a.at(i) + b.at(i));
-    }
-
-    return Vector(std::move(v), *this);
+    return Vector(vb.add(a, b), *this);
 }
 
 Vector Context::sub(const Vector& a, const Vector& b) {
     checkVectors(a, b);
-    std::vector<Expression> v;
-    for(std::size_t i = 0;i < a.getSize();i++) {
-        v.push_back(a.at(i) - b.at(i));
-    }
-    return Vector(std::move(v), *this);
-}
-
-Vector Context::mult(const Vector& a, const Expression& b) {
-    std::vector<Expression> v;
-    for(std::size_t i = 0;i < a.getSize();i++) {
-        v.push_back(a.at(i) * b);
-    }
-
-    return Vector(std::move(v), *this);
+    return Vector(vb.sub(a, b), *this);
 }
 
 Vector Context::mult(const Expression& a, const Vector& b) {
+    return Vector(vb.mult(a, b), *this);
+}
+
+
+Vector Context::mult(const Vector& a, const Expression& b) {
     return mult(b, a);
 }
 
 Vector Context::div(const Vector& a, const Expression& b) {
-    std::vector<Expression> v;
-    for(std::size_t i = 0;i < a.getSize();i++) {
-        v.push_back(a.at(i) / b);
-    }
-
-    return Vector(std::move(v), *this);
+    return Vector(vb.div(a, b), *this);
 }
 
 // TODO: This needs to be implemented

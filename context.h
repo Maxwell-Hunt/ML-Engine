@@ -45,6 +45,7 @@ private:
     void checkExpressions(const Expression& e1, const Expression& e2) const;
     void checkVectors(const Vector& a, const Vector& b) const;
 
+    VectorBehaviour vb;
     std::unordered_set<const Internal::Expression*> expressions;
 };
 

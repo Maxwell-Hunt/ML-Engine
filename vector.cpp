@@ -32,6 +32,42 @@ std::vector<Expression>::iterator Vector::end() {
     return data.end();
 }
 
+std::vector<Expression> VectorBehaviour::add(const Vector& a, const Vector& b) const {
+    std::vector<Expression> v;
+    for(std::size_t i = 0;i < a.getSize();i++) {
+        v.push_back(a.at(i) + b.at(i));
+    }
+
+    return v;
+}
+
+std::vector<Expression> VectorBehaviour::sub(const Vector& a, const Vector& b) const {
+    std::vector<Expression> v;
+    for(std::size_t i = 0;i < a.getSize();i++) {
+        v.push_back(a.at(i) - b.at(i));
+    }
+
+    return v;
+}
+
+std::vector<Expression> VectorBehaviour::mult(const Expression& a, const Vector& b) const {
+    std::vector<Expression> v;
+    for(std::size_t i = 0;i < b.getSize();i++) {
+        v.push_back(b.at(i) * a);
+    }
+
+    return v;
+}
+
+std::vector<Expression> VectorBehaviour::div(const Vector& a, const Expression& b) const {
+    std::vector<Expression> v;
+    for(std::size_t i = 0;i < a.getSize();i++) {
+        v.push_back(a.at(i) / b);
+    }
+
+    return v;
+}
+
 Vector operator+(const Vector& a, const Vector& b) {
     return a.getContext().add(a, b);
 } 

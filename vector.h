@@ -31,6 +31,14 @@ private:
     Context& context;
 };
 
+class VectorBehaviour {
+public:
+    std::vector<Expression> add(const Vector& a, const Vector& b) const;
+    std::vector<Expression> sub(const Vector& a, const Vector& b) const;
+    std::vector<Expression> mult(const Expression& a, const Vector& b) const;
+    std::vector<Expression> div(const Vector& a, const Expression& b) const;
+};
+
 Vector operator+(const Vector& a, const Vector& b);
 Vector operator-(const Vector& a, const Vector& b);
 Vector operator*(const Vector& a, const Expression& b);

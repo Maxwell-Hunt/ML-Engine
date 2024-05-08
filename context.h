@@ -32,8 +32,18 @@ public:
 
     Expression square(const Expression& ex);
 
+    Vector add(const Vector& a, const Vector& b);
+    Vector sub(const Vector& a, const Vector& b);
+    Vector mult(const Vector& a, const Expression& b);
+    Vector mult(const Expression& a, const Vector& b);
+    Vector div(const Vector& a, const Expression& b);
+
+    // TODO: This needs to be implemented
+    Expression dot(const Vector& a, const Vector& b);
+
 private:
     void checkExpressions(const Expression& e1, const Expression& e2) const;
+    void checkVectors(const Vector& a, const Vector& b) const;
 
     std::unordered_set<const Internal::Expression*> expressions;
 };

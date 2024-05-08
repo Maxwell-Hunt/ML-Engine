@@ -16,9 +16,13 @@ Vector::Vector(std::size_t size, bool zeros, Context& context) : size{size}, dat
 
 Vector::Vector(std::vector<Expression>&& data, Context& context) : size{data.size()}, data{std::move(data)}, context{context} {}
 
-float Vector::at(std::size_t index) const {
-    return data.at(index).getValue();
+const Expression& Vector::at(std::size_t index) const {
+    return data.at(index);
 }
+
+std::size_t Vector::getSize() const { return size; }
+
+Context& Vector::getContext() const { return context; }
 
 std::vector<Expression>::iterator Vector::begin() {
     return data.begin();
@@ -26,4 +30,24 @@ std::vector<Expression>::iterator Vector::begin() {
 
 std::vector<Expression>::iterator Vector::end() {
     return data.end();
+}
+
+Vector operator+(const Vector& a, const Vector& b) {
+    return a.getContext().add(a, b);
+} 
+
+Vector operator-(const Vector& a, const Vector& b) {
+    return a.getContext().sub(a, b);
+}
+
+Vector operator*(const Vector& a, const Expression& b) {
+    return a.getContext().mult(a, b);
+}
+
+Vector operator*(const Expression& a, const Vector& b) {
+    return a.getContext().mult(a, b);
+}
+
+Vector operator/(const Vector& a, const Expression& b) {
+    return a.getContext().div(a, b);
 }

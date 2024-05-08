@@ -1,5 +1,7 @@
 #include "context.h"
 
+// TODO: the dot product function needs to be calculated
+
 Context::~Context() {
         for(const Internal::Expression* ex : expressions) delete ex;
 }
@@ -89,8 +91,61 @@ Expression Context::square(const Expression& ex) {
     return Expression(*sq);
 }
 
+Vector Context::add(const Vector& a, const Vector& b) {
+    checkVectors(a, b);
+    std::vector<Expression> v;
+    for(std::size_t i = 0;i < a.getSize();i++) {
+        v.push_back(a.at(i) + b.at(i));
+    }
+
+    return Vector(std::move(v), *this);
+}
+
+Vector Context::sub(const Vector& a, const Vector& b) {
+    checkVectors(a, b);
+    std::vector<Expression> v;
+    for(std::size_t i = 0;i < a.getSize();i++) {
+        v.push_back(a.at(i) - b.at(i));
+    }
+    return Vector(std::move(v), *this);
+}
+
+Vector Context::mult(const Vector& a, const Expression& b) {
+    std::vector<Expression> v;
+    for(std::size_t i = 0;i < a.getSize();i++) {
+        v.push_back(a.at(i) * b);
+    }
+
+    return Vector(std::move(v), *this);
+}
+
+Vector Context::mult(const Expression& a, const Vector& b) {
+    return mult(b, a);
+}
+
+Vector Context::div(const Vector& a, const Expression& b) {
+    std::vector<Expression> v;
+    for(std::size_t i = 0;i < a.getSize();i++) {
+        v.push_back(a.at(i) / b);
+    }
+
+    return Vector(std::move(v), *this);
+}
+
+// TODO: This needs to be implemented
+Expression Context::dot(const Vector& a, const Vector& b) {
+    checkVectors(a, b);
+
+}
+
 void Context::checkExpressions(const Expression& e1, const Expression& e2) const {
     if(!(expressions.count(&e1.data()) && expressions.count(&e2.data()))) {
         throw std::runtime_error("WHY ARE YOU DOING THIS???");
+    }
+}
+
+void Context::checkVectors(const Vector& a, const Vector& b) const {
+    if(a.getSize() != b.getSize()) {
+        throw std::runtime_error("Vectors must have same size");
     }
 }

@@ -15,7 +15,10 @@ class Vector {
 friend class Context;
 public:
     // Note this is NOT a constant time function as it requires calling get_value()
-    float at(std::size_t index) const;
+    const Expression& at(std::size_t index) const;
+
+    std::size_t getSize() const;
+    Context& getContext() const;
 
     std::vector<Expression>::iterator begin();
     std::vector<Expression>::iterator end();
@@ -27,5 +30,11 @@ private:
     std::vector<Expression> data;
     Context& context;
 };
+
+Vector operator+(const Vector& a, const Vector& b);
+Vector operator-(const Vector& a, const Vector& b);
+Vector operator*(const Vector& a, const Expression& b);
+Vector operator*(const Expression& a, const Vector& b);
+Vector operator/(const Vector& a, const Expression& b);
 
 #endif

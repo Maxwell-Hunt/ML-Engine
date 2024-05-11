@@ -16,6 +16,12 @@ Vector::Vector(std::size_t size, bool zeros, Context& context) : size{size}, dat
 
 Vector::Vector(std::vector<Expression>&& data, Context& context) : size{data.size()}, data{std::move(data)}, context{context} {}
 
+Vector::Vector(std::size_t size, float value, Context& context) : size{size}, context{context} {
+    for(std::size_t i = 0;i < size;i++) {
+        data.push_back(context.createVariable(value));
+    }
+}
+
 const Expression& Vector::at(std::size_t index) const {
     return data.at(index);
 }
@@ -66,6 +72,17 @@ std::vector<Expression> VectorBehaviour::div(const Vector& a, const Expression& 
     }
 
     return v;
+}
+
+// TODO: Change the way this is implemented.  As is, it allocates way more objects than
+//       are necessary.  This might require some structural changes to the project.  I.e.
+//       we may have to introduce some operation classs which handle arbitrary numbers of operands
+Expression VectorBehaviour::dot(const Vector& a, const Vector& b) const {
+    Expression result = a.at(0) * b.at(0);
+    for(std::size_t i = 1;i < a.getSize();i++) {
+        result = result + a.at(i) * b.at(i);
+    }
+    return result;
 }
 
 Vector operator+(const Vector& a, const Vector& b) {

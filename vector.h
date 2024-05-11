@@ -25,6 +25,7 @@ public:
 private:
     Vector(std::size_t size, bool zeros, Context& context);
     Vector(std::vector<Expression>&& data, Context& context);
+    Vector(std::size_t size, float value, Context& context);
 
     std::size_t size;
     std::vector<Expression> data;
@@ -37,6 +38,8 @@ public:
     std::vector<Expression> sub(const Vector& a, const Vector& b) const;
     std::vector<Expression> mult(const Expression& a, const Vector& b) const;
     std::vector<Expression> div(const Vector& a, const Expression& b) const;
+
+    Expression dot(const Vector& a, const Vector& b) const;
 };
 
 Vector operator+(const Vector& a, const Vector& b);

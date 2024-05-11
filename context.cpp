@@ -16,6 +16,10 @@ Vector Context::createVector(std::size_t size, bool isZero) {
     return Vector(size, isZero, *this);
 }
 
+Vector Context::createVector(std::size_t size, float value) {
+    return Vector(size, value, *this);
+}
+
 Expression Context::add(const Expression& e1, const Expression& e2) {
     checkExpressions(e1, e2);
 
@@ -114,10 +118,8 @@ Vector Context::div(const Vector& a, const Expression& b) {
     return Vector(vb.div(a, b), *this);
 }
 
-// TODO: This needs to be implemented
 Expression Context::dot(const Vector& a, const Vector& b) {
-    checkVectors(a, b);
-
+    return vb.dot(a, b);
 }
 
 void Context::checkExpressions(const Expression& e1, const Expression& e2) const {
@@ -127,7 +129,7 @@ void Context::checkExpressions(const Expression& e1, const Expression& e2) const
 }
 
 void Context::checkVectors(const Vector& a, const Vector& b) const {
-    if(a.getSize() != b.getSize()) {
+    if(a.getSize() != b.getSize() || a.getSize() == 0) {
         throw std::runtime_error("Vectors must have same size");
     }
 }

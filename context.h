@@ -13,6 +13,7 @@ public:
 
     Expression createVariable(float val);
     Vector createVector(std::size_t size, bool isZero);
+    Vector createVector(std::size_t size, float value);
 
     Expression add(const Expression& e1, const Expression& e2);
     Expression add(float val, const Expression& e2);

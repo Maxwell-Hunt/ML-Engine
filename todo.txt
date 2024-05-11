@@ -1,0 +1,4 @@
+ - Use singleton design pattern on context
+ - Update ownership to use shared_ptr (think about this)
+ - Make distinction between generalOperation & binaryOperation
+ - Implement reverse mode autodiff instead of forward mode

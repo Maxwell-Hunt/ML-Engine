@@ -1,18 +1,38 @@
 #ifndef __EXPRESSION__
 #define __EXPRESSION__
+
+#include <memory>
+
 class Context;
 
 namespace Internal {
 
 class Expression {
-protected:
-    Expression(Context& context) : context{context} {}
-    Context& context;
+friend class ::Context;
 public:
-    virtual ~Expression() {}
+    virtual ~Expression() = default;
     virtual float getValue() const = 0;
-    virtual float getPartial(const Expression& other) const = 0;
     Context& getContext() const { return context; }
+
+protected:
+    Expression(Context& context) : context{context}, partial{0} {}
+
+    virtual float getPartial() const { return partial; }
+
+    void addToPartial(Expression& other, float value) const { other.partial += value; }
+
+    void propagate(Expression& other) { other.backPropagateInternal(); }
+
+
+    Context& context;
+private:
+    void backPropagate() {
+        partial = 1;
+        backPropagateInternal();
+    }
+
+    virtual void backPropagateInternal() = 0;
+    float partial;
 };
 
 }
@@ -20,23 +40,21 @@ public:
 class Expression {
 public:
     Expression() : expr{nullptr} {}
-    Expression(const Internal::Expression& expr) : expr{&expr} {}
+    Expression(Internal::Expression* expr) : expr{expr} {}
 
     Expression(const Expression& expr) = delete;
     Expression(Expression&& expr) : expr{(expr.expr)} {}
 
     Expression& operator=(const Expression&) = delete;
-    Expression& operator=(Expression&& expr) { this->expr = expr.expr; return *this; }
+    Expression& operator=(Expression&& expr) { this->expr = std::move(expr.expr); return *this; }
 
     Context& getContext() const { return expr->getContext(); }
 
     float getValue() const { return expr->getValue(); }
-    float getPartial(const Expression& other) const { return expr->getPartial(other.data()); }
-
-    const Internal::Expression& data() const { return *expr; }
+    std::shared_ptr<Internal::Expression> getData() const { return expr; }
 
 private:
-    const Internal::Expression* expr;
+    std::shared_ptr<Internal::Expression> expr;
 };
 
 #endif

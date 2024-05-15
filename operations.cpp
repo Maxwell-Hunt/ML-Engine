@@ -1,69 +1,79 @@
 #include "operations.h"
 #include "context.h"
 
-BinaryOperation::BinaryOperation(const Expression& e1, const Expression& e2, Context& context) :
-    Expression{context}, e1{e1}, e2{e2} {}
+BinaryOperation::BinaryOperation(const std::shared_ptr<Internal::Expression>& e1, const std::shared_ptr<Internal::Expression>& e2, Context& context) :
+    Internal::Expression{context}, e1{e1}, e2{e2} {}
 
-UnaryOperation::UnaryOperation(const Expression& subexpr, Context& context) :
-    Expression{context}, subexpr{subexpr} {}
+void BinaryOperation::backPropagateInternal() {
+    updatePartials();
+    propagate(*e1);
+    // Propagating errors backwards twice would result in incorect partials
+    if(e1 != e2) { propagate(*e2); }
+}
 
-Addition::Addition(const Expression& e1, const Expression& e2, Context& context) :
+UnaryOperation::UnaryOperation(const std::shared_ptr<Internal::Expression>& subexpr, Context& context) :
+    Internal::Expression{context}, subexpr{subexpr} {}
+
+Addition::Addition(const std::shared_ptr<Internal::Expression>& e1, const std::shared_ptr<Internal::Expression>& e2, Context& context) :
     BinaryOperation{e1, e2, context} {}
 
 float Addition::getValue() const {
-    return e1.getValue() + e2.getValue();
+    return e1->getValue() + e2->getValue();
 }
 
-float Addition::getPartial(const Expression& other) const {
-    return e1.getPartial(other) + e2.getPartial(other);
+void Addition::updatePartials() {
+    addToPartial(*e1, getPartial());
+    addToPartial(*e2, getPartial());
 }
 
-Subtraction::Subtraction(const Expression& e1, const Expression& e2, Context& context) :
+Subtraction::Subtraction(const std::shared_ptr<Internal::Expression>& e1, const std::shared_ptr<Internal::Expression>& e2, Context& context) :
     BinaryOperation{e1, e2, context} {}
 
 float Subtraction::getValue() const {
-    return e1.getValue() - e2.getValue();
+    return e1->getValue() - e2->getValue();
 }
 
-float Subtraction::getPartial(const Expression& other) const {
-    return e1.getPartial(other) - e2.getPartial(other);
+void Subtraction::updatePartials() {
+    addToPartial(*e1, getPartial());
+    addToPartial(*e2, -getPartial());
 }
 
-Multiplication::Multiplication(const Expression& e1, const Expression& e2, Context& context) :
+Multiplication::Multiplication(const std::shared_ptr<Internal::Expression>& e1, const std::shared_ptr<Internal::Expression>& e2, Context& context) :
     BinaryOperation{e1, e2, context} {}
 
 float Multiplication::getValue() const {
-    return e1.getValue() * e2.getValue();
+    return e1->getValue() * e2->getValue();
 }
 
-float Multiplication::getPartial(const Expression& other) const {
-    return e1.getPartial(other) * e2.getValue() + e1.getValue() * e2.getPartial(other);
+void Multiplication::updatePartials() {
+    addToPartial(*e1, e2->getValue() * getPartial());
+    addToPartial(*e2, e1->getValue() * getPartial());
 }
 
-Division::Division(const Expression& e1, const Expression& e2, Context& context) :
+Division::Division(const std::shared_ptr<Internal::Expression>& e1, const std::shared_ptr<Internal::Expression>& e2, Context& context) :
     BinaryOperation{e1, e2, context} {}
 
 float Division::getValue() const {
-    return e1.getValue() / e2.getValue();
+    return e1->getValue() / e2->getValue();
 }
 
-float Division::getPartial(const Expression& other) const {
-    float e1Value = e1.getValue();
-    float e2Value = e2.getValue();
-    float e1Partial = e1.getPartial(other);
-    float e2Partial = e2.getPartial(other);
-    return (e1Partial* e2Value - e2Partial * e1Value) / (e2Value * e2Value);
+void Division::updatePartials() {
+    float val1 = e1->getValue();
+    float val2 = e2->getValue();
+    addToPartial(*e1,  (1 / val2) * getPartial());
+    addToPartial(*e2, (-val1 / (val2 * val2)) * getPartial());
 }
 
-Square::Square(const Expression& subexpr, Context& context) : UnaryOperation{subexpr, context} {}
+Square::Square(const std::shared_ptr<Internal::Expression>& subexpr, Context& context) :
+    UnaryOperation{subexpr, context} {}
 
 float Square::getValue() const {
-    float x = subexpr.getValue();
-    return x * x;
+    float val = subexpr->getValue();
+    return val * val;
 }
 
-float Square::getPartial(const Expression& other) const {
-    return 2 * subexpr.getValue() * subexpr.getPartial(other);
+void Square::backPropagateInternal() {
+    addToPartial(*subexpr, 2 * subexpr->getValue() * getPartial());
 }
 
 Expression operator+(const Expression& e1, const Expression& e2) {

@@ -39,6 +39,9 @@ Expression operator-(const Expression& e1, const Expression& e2);
 Expression operator-(const Expression& e1, float val);
 Expression operator-(float val, const Expression& e2);
 
+void operator+=(Expression& e1, const Expression& e2);
+void operator-=(Expression& e1, const Expression& e2);
+
 Expression operator*(const Expression& e1, const Expression& e2);
 Expression operator*(const Expression& e1, float val);
 Expression operator*(float val, const Expression& e2);

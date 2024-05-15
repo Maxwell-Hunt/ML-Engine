@@ -104,6 +104,14 @@ Expression operator-(float val, const Expression& e2) {
     return e2.getContext().sub(val, e2);
 } 
 
+void operator+=(Expression& e1, const Expression& e2) {
+    e1 = e1 + e2;
+}
+
+void operator-=(Expression& e1, const Expression& e2) {
+    e1 = e1 - e2;
+}
+
 Expression operator*(const Expression& e1, const Expression& e2) {
     return e1.getContext().mult(e1, e2);
 }

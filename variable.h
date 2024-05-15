@@ -5,12 +5,9 @@
 
 class Variable : public Internal::Expression {
 friend class Context;
-public:
-    virtual float getValue() const override;
 private:
-    Variable(float val, Context& context);
+    Variable(float value, Context& context);
     virtual void backPropagateInternal() override;
-    float val;
 };
 
 #endif

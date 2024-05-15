@@ -11,11 +11,11 @@ class Expression {
 friend class ::Context;
 public:
     virtual ~Expression() = default;
-    virtual float getValue() const = 0;
+    float getValue() { return value; }
     Context& getContext() const { return context; }
 
 protected:
-    Expression(Context& context) : context{context}, partial{0} {}
+    Expression(Context& context, float value) : context{context}, value{value}, partial{0} {}
 
     virtual float getPartial() const { return partial; }
 
@@ -32,6 +32,7 @@ private:
     }
 
     virtual void backPropagateInternal() = 0;
+    float value;
     float partial;
 };
 

@@ -1,6 +1,5 @@
 #include "variable.h"
 
-Variable::Variable(float val, Context& context) : Internal::Expression{context}, val{val} {}
+Variable::Variable(float value, Context& context) : Internal::Expression{context, value} {}
 
-float Variable::getValue() const { return val; }
 void Variable::backPropagateInternal() {}

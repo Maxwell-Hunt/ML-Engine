@@ -79,3 +79,51 @@ float Context::computeGradients(const Expression& target, const Expression& sour
     target.getData()->backPropagate();
     return source.getData()->getPartial();
 }
+
+Expression operator+(const Expression& e1, const Expression& e2) {
+    return e1.getContext().add(e1, e2);
+}
+
+Expression operator+(const Expression& e1, float val) {
+    return e1.getContext().add(e1, val);
+}
+
+Expression operator+(float val, const Expression& e2) {
+    return e2.getContext().add(val, e2);
+} 
+
+Expression operator-(const Expression& e1, const Expression& e2) {
+    return e1.getContext().sub(e1, e2);
+}
+
+Expression operator-(const Expression& e1, float val) {
+    return e1.getContext().sub(e1, val);
+}
+
+Expression operator-(float val, const Expression& e2) {
+    return e2.getContext().sub(val, e2);
+} 
+
+Expression operator*(const Expression& e1, const Expression& e2) {
+    return e1.getContext().mult(e1, e2);
+}
+
+Expression operator*(const Expression& e1, float val) {
+    return e1.getContext().mult(e1, val);
+}
+
+Expression operator*(float val, const Expression& e2) {
+    return e2.getContext().mult(val, e2);
+}
+
+Expression operator/(const Expression& e1, const Expression& e2) {
+    return e1.getContext().div(e1, e2);
+}
+
+Expression operator/(const Expression& e1, float val) {
+    return e1.getContext().div(e1, val);
+}
+
+Expression operator/(float val, const Expression& e2) {
+    return e2.getContext().div(val, e2);
+}

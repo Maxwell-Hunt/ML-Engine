@@ -2,13 +2,10 @@
 #include "variable.h"
 #include "operations.h"
 
-// TODO: the dot product function needs to be calculated
-
 Expression Context::createVariable(float val) {
     Variable* v = new Variable(val, *this);
     return Expression(v);
 }
-
 
 Expression Context::add(const Expression& e1, const Expression& e2) {
     Addition* sum = new Addition(e1.getData(), e2.getData(), *this);

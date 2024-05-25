@@ -1,5 +1,6 @@
 #include "operations.h"
 #include "context.h"
+#include <numeric>
 
 ReductionOperation::ReductionOperation(std::vector<std::shared_ptr<Internal::Expression>>&& data, Context& context, float value) :
     Internal::Expression{context, value}, data{data} {}

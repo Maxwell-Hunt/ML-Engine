@@ -43,7 +43,7 @@ template <typename T>
 Tensor<T>::Tensor(const std::vector<std::size_t>& shape) : 
     _shape{shape},
     _size{std::accumulate(_shape.begin(), _shape.end(), 1u, std::multiplies<std::size_t>())},
-    _data{std::vector<T>(_size, 0)}
+    _data{std::vector<T>(_size)}
     {}
 
 template <typename T>

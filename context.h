@@ -4,6 +4,7 @@
 #include <unordered_set>
 #include <stdexcept>
 #include "expression.h"
+#include "tensor.h"
 
 class Context {
 public:

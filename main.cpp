@@ -1,19 +1,14 @@
 #include <iostream>
+#include <vector>
 #include "context.h"
+#include "tensor.h"
 
 int main() {
     Context context;
+    Tensor<Expression> expressions({2, 2});
+    // Expression sum = context.add(expressions.at({0, 0}), context.reduceAdd(expressions));
 
-    Expression x = context.createVariable(10);
-    Expression y = context.createVariable(5);
+    // float gradient = context.computeGradients(sum, expressions.at({0, 0}));
 
-    Expression quot = context.div(x, y);
-    quot = context.div(quot, 10);
-    quot = context.div(1, quot);
-
-    quot = context.sub(quot, 100);
-
-    float grad = context.computeGradients(quot, x);
-
-    std::cout << grad;
+    // std::cout << sum.getValue() << ' ' << gradient;
 }

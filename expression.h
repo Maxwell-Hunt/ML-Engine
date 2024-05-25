@@ -44,7 +44,7 @@ public:
     Expression(Internal::Expression* expr) : expr{expr} {}
 
     Expression(const Expression& expr) = delete;
-    Expression(Expression&& expr) : expr{(expr.expr)} {}
+    Expression(Expression&& expr) noexcept : expr{(expr.expr)} {}
 
     Expression& operator=(const Expression&) = delete;
     Expression& operator=(Expression&& expr) { this->expr = std::move(expr.expr); return *this; }

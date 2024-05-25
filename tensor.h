@@ -30,6 +30,8 @@ public:
     const std::vector<std::size_t>& shape() const;
     std::size_t size() const;
 
+    const std::vector<T>& data() const;
+
     T dot(const Tensor& other) const;
 private:
     std::vector<std::size_t> _shape;
@@ -68,6 +70,11 @@ const std::vector<std::size_t>& Tensor<T>::shape() const {
 template <typename T>
 std::size_t Tensor<T>::size() const {
     return _size;
+}
+
+template <typename T>
+const std::vector<T>& Tensor<T>::data() const {
+    return _data;
 }
 
 template <typename T>

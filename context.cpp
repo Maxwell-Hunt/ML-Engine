@@ -1,6 +1,8 @@
 #include "context.h"
 #include "variable.h"
 #include "operations.h"
+#include "tensor.h"
+#include <ranges>
 
 Expression Context::createVariable(float val) {
     Variable* v = new Variable(val, *this);
@@ -70,6 +72,13 @@ Expression Context::div(const Expression& e1, float val) {
 Expression Context::square(const Expression& ex) {
     Square* sq = new Square(ex.getData(), *this);
     return Expression(sq);
+}
+
+Expression Context::reduceAdd(const Tensor<Expression>& expressions) {
+    auto v = expressions.data() | std::views::transform([](const auto& e){ return e.getData(); });
+    std::vector<std::shared_ptr<Internal::Expression>> temp(v.begin(), v.end());
+    ReduceAdd* sum = new ReduceAdd(std::move(temp), *this);
+    return Expression(sum);
 }
 
 float Context::computeGradients(const Expression& target, const Expression& source) {

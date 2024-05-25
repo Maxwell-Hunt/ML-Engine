@@ -27,6 +27,8 @@ public:
 
     Expression square(const Expression& ex);
 
+    Expression reduceAdd(const Tensor<Expression>& expressions);
+
     float computeGradients(const Expression& target, const Expression& source);
 };
 

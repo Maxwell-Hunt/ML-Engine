@@ -1,6 +1,9 @@
 #include "operations.h"
 #include "context.h"
 
+ReductionOperation::ReductionOperation(std::vector<std::shared_ptr<Internal::Expression>>&& data, Context& context, float value) :
+    Internal::Expression{context, value}, data{data} {}
+
 BinaryOperation::BinaryOperation(const std::shared_ptr<Internal::Expression>& e1, const std::shared_ptr<Internal::Expression>& e2, Context& context, float value) :
     Internal::Expression{context, value}, e1{e1}, e2{e2} {}
 
@@ -53,4 +56,17 @@ Square::Square(const std::shared_ptr<Internal::Expression>& subexpr, Context& co
 
 void Square::backPropagateInternal() {
     addToPartial(*subexpr, 2 * subexpr->getValue() * getPartial());
+    propagate(*subexpr);
+}
+
+ReduceAdd::ReduceAdd(std::vector<std::shared_ptr<Internal::Expression>>&& data, Context& context) :
+    ReductionOperation{std::move(data), context, 
+        std::accumulate(data.begin(), data.end(), 0.f, 
+        [](float sum, const std::shared_ptr<Internal::Expression>& next)
+            { return sum + next->getValue();})} {}
+
+void ReduceAdd::backPropagateInternal() {
+    for(auto& expr : data) addToPartial(*expr, getPartial());
+    // This step relies on the fact that data does not contain duplicate expressions
+    for(auto& expr : data) propagate(*expr);
 }

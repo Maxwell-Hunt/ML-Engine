@@ -2,7 +2,15 @@
 #define __OPERATIONS__
 
 #include "expression.h"
+#include <vector>
 
+class ReductionOperation : public Internal::Expression {
+public:
+    virtual ~ReductionOperation() = default;
+protected:
+    ReductionOperation(std::vector<std::shared_ptr<Internal::Expression>>&& data, Context& context, float value);
+    std::vector<std::shared_ptr<Internal::Expression>> data;
+};
 
 class BinaryOperation : public Internal::Expression {
 public:
@@ -56,6 +64,13 @@ class Square : public UnaryOperation {
 friend class Context;
 private:
     Square(const std::shared_ptr<Internal::Expression>& subexpr, Context& context);
+    virtual void backPropagateInternal() override;
+};
+
+class ReduceAdd : public ReductionOperation {
+friend class Context;
+private:
+    ReduceAdd(std::vector<std::shared_ptr<Internal::Expression>>&& data, Context& context);
     virtual void backPropagateInternal() override;
 };
 

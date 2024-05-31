@@ -9,6 +9,20 @@ Expression Context::createVariable(float val) {
     return Expression(v);
 }
 
+Tensor<Expression> Context::createZeroTensor(const std::vector<std::size_t>& shape) {
+    Tensor<Expression> t(shape);
+    for(Expression& ex : t) ex = createVariable(0);
+    return t;
+}
+
+Tensor<Expression> Context::createRandomTensor(const std::vector<std::size_t>& shape) {
+    std::mt19937 gen(rd());
+    std::uniform_real_distribution<> dis(-1.5f, 1.5f);
+    Tensor<Expression> t(shape);
+    for(Expression& ex : t) ex = createVariable(dis(gen));
+    return t;
+}
+
 Expression Context::add(const Expression& e1, const Expression& e2) {
     Addition* sum = new Addition(e1.getData(), e2.getData(), *this);
     return Expression(sum);

@@ -4,6 +4,8 @@
 #include "tensor.h"
 #include <ranges>
 
+// TODO: Turn this class into a collection of functions
+
 Expression Context::createVariable(float val) {
     Variable* v = new Variable(val, *this);
     return Expression(v);
@@ -11,7 +13,7 @@ Expression Context::createVariable(float val) {
 
 Tensor<Expression> Context::createZeroTensor(const std::vector<std::size_t>& shape) {
     Tensor<Expression> t(shape);
-    for(Expression& ex : t) ex = createVariable(0);
+    for(Expression& ex : t) ex = createVariable(0.f);
     return t;
 }
 

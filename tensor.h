@@ -30,6 +30,7 @@ class Tensor {
 public:
     Tensor(const std::vector<std::size_t>& shape);
     T& at(const std::vector<std::size_t>& indices);
+    const T& at(const std::vector<std::size_t>& indices) const;
     typename std::vector<T>::iterator begin();
     typename std::vector<T>::iterator end();
 
@@ -40,6 +41,9 @@ public:
 
     T dot(const Tensor& other) const;
 private:
+
+    std::size_t getIndex(const std::vector<std::size_t>& indices) const;
+
     std::vector<std::size_t> _shape;
     std::size_t _size;
     std::vector<T> _data;
@@ -53,7 +57,7 @@ Tensor<T>::Tensor(const std::vector<std::size_t>& shape) :
     {}
 
 template <typename T>
-T& Tensor<T>::at(const std::vector<std::size_t>& indices) {
+std::size_t Tensor<T>::getIndex(const std::vector<std::size_t>& indices) const {
     if(indices.size() != _shape.size()) {
         throw std::runtime_error("Incorrect number of indices");
     }
@@ -65,7 +69,18 @@ T& Tensor<T>::at(const std::vector<std::size_t>& indices) {
         index += arr_size * indices.at(i);
     }
 
-    return _data.at(index);
+    return index;
+}
+
+template <typename T>
+const T& Tensor<T>::at(const std::vector<std::size_t>& indices) const {
+    return _data.at(getIndex(indices));
+}
+
+
+template <typename T>
+T& Tensor<T>::at(const std::vector<std::size_t>& indices) {
+    return _data.at(getIndex(indices));
 }
 
 template <typename T>

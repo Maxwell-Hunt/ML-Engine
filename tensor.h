@@ -39,7 +39,7 @@ public:
 
     const std::vector<T>& data() const;
 
-    T dot(const Tensor& other) const;
+    void reshape(std::vector<std::size_t>&& new_shape);
 private:
 
     std::size_t getIndex(const std::vector<std::size_t>& indices) const;
@@ -86,6 +86,14 @@ T& Tensor<T>::at(const std::vector<std::size_t>& indices) {
 template <typename T>
 const std::vector<std::size_t>& Tensor<T>::shape() const {
     return _shape;
+}
+
+template <typename T>
+void Tensor<T>::reshape(std::vector<std::size_t>&& new_shape) {
+    if(std::accumulate(new_shape.begin(), new_shape.end(), 1u, std::multiplies<std::size_t>()) != _size) {
+        throw std::runtime_error("Invalid Reshape");
+    }
+    _shape = std::move(new_shape);
 }
 
 template <typename T>

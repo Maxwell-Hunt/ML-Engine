@@ -97,6 +97,32 @@ Expression Context::reduceAdd(const Tensor<Expression>& expressions) {
     return Expression(sum);
 }
 
+Tensor<Expression> Context::matmul(const Tensor<Expression>& a, const Tensor<Expression>& b) {
+    std::size_t dimsA = a.shape().size();
+    std::size_t dimsB = b.shape().size();
+    if(dimsA != 2 || dimsB != 2) {
+        throw std::runtime_error("Can only perform matmul on 2 dimensional tensors");
+    }
+
+    if(a.shape().at(1) != b.shape().at(0)) {
+        throw std::runtime_error("Dimensions incorrect for matrix multiplication");
+    }
+    
+    Tensor<Expression> result({a.shape().at(0), b.shape().at(1)});
+
+    for(std::size_t i = 0;i < a.shape().at(0);i++) {
+        for(std::size_t j = 0;j < b.shape().at(1);j++) {
+            std::vector<std::shared_ptr<Internal::Expression>> temp(a.shape().at(1));
+            for(std::size_t k = 0;k < a.shape().at(1);k++) {
+                temp.at(k) = std::shared_ptr<Internal::Expression>(new Multiplication(a.at({i, k}).getData(), b.at({k, j}).getData(), *this));
+            }
+            result.at({i, j}) = Expression(new ReduceAdd(std::move(temp), *this));
+        }
+    }
+
+    return result;
+}
+
 float Context::computeGradients(const Expression& target, const Expression& source) {
     target.getData()->backPropagate();
     return source.getData()->getPartial();

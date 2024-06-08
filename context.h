@@ -33,6 +33,8 @@ public:
 
     Expression reduceAdd(const Tensor<Expression>& expressions);
 
+    Tensor<Expression> matmul(const Tensor<Expression>& a, const Tensor<Expression>& b);
+
     float computeGradients(const Expression& target, const Expression& source);
 private:
     std::random_device rd;

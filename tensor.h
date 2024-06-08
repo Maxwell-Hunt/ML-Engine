@@ -4,22 +4,28 @@
 #include <vector>
 #include <numeric>
 #include <stdexcept>
+#include <type_traits>
 
 template <typename T>
 class Tensor {
 
-template <typename H>
-friend Tensor<H> operator+(const Tensor<H>& a, const Tensor<H>& b);
-template <typename H>
-friend Tensor<H> operator-(const Tensor<H>& a, const Tensor<H>& b);
-template <typename H>
-friend Tensor<T> operator*(const Tensor<H>& a, const Tensor<H>& b);
-template <typename H>
-friend Tensor<H> operator*(const Tensor<H>& a, const H& scalar);
-template <typename H>
-friend Tensor<H> operator*(const H& scalar, const Tensor<H>& a);
-template <typename H>
-friend Tensor<H> operator/(const Tensor<H>& a, const H& scalar);
+    template <typename U, typename H>
+    friend auto operator+(const Tensor<U>& a, const Tensor<H>& b) -> Tensor<decltype(std::declval<U>() + std::declval<H>())>;
+
+    template <typename U, typename H>
+    friend auto operator-(const Tensor<U>& a, const Tensor<H>& b) -> Tensor<decltype(std::declval<U>() - std::declval<H>())>;
+
+    template <typename U, typename H>
+    friend auto operator*(const Tensor<U>& a, const Tensor<H>& b) -> Tensor<decltype(std::declval<U>() * std::declval<H>())>;
+
+    template <typename U, typename H>
+    friend auto operator*(const Tensor<U>& a, const H& scalar) -> Tensor<decltype(std::declval<U>() * std::declval<H>())>;
+
+    template <typename U, typename H>
+    friend auto operator*(const U& scalar, const Tensor<H>& a) -> Tensor<decltype(std::declval<U>() * std::declval<H>())>;
+
+    template <typename U, typename H>
+    friend auto operator/(const Tensor<U>& a, const H& scalar) -> Tensor<decltype(std::declval<U>() / std::declval<H>())>;
 
 public:
     Tensor(const std::vector<std::size_t>& shape);
@@ -83,13 +89,14 @@ typename std::vector<T>::iterator Tensor<T>::begin() { return _data.begin(); }
 template <typename T>
 typename std::vector<T>::iterator Tensor<T>::end() { return _data.end(); }
 
-template <typename T>
-Tensor<T> operator+(const Tensor<T>& a, const Tensor<T>& b) {
+template <typename U, typename H>
+auto operator+(const Tensor<U>& a, const Tensor<H>& b) -> Tensor<decltype(std::declval<U>() + std::declval<H>())> {
     if(a.shape() != b.shape()) {
         throw std::runtime_error("Addition cannot proceed as tensor shapes do not match");
     }
 
-    Tensor<T> result(a.shape());
+    using ResultType = decltype(std::declval<U>() + std::declval<H>());
+    Tensor<ResultType> result(a.shape());
     for(std::size_t i = 0;i < a.size();i++) {
         result._data.at(i) = a._data.at(i) + b._data.at(i);
     }
@@ -97,13 +104,14 @@ Tensor<T> operator+(const Tensor<T>& a, const Tensor<T>& b) {
     return result;
 }
 
-template <typename T>
-Tensor<T> operator-(const Tensor<T>& a, const Tensor<T>& b) {
+template <typename U, typename H>
+auto operator-(const Tensor<U>& a, const Tensor<H>& b) -> Tensor<decltype(std::declval<U>() - std::declval<H>())> {
     if(a.shape() != b.shape()) {
         throw std::runtime_error("Subtraction cannot proceed as tensor shapes do not match");
     }
 
-    Tensor<T> result(a.shape());
+    using ResultType = decltype(std::declval<U>() - std::declval<H>());
+    Tensor<ResultType> result(a.shape());
     for(std::size_t i = 0;i < a.size();i++) {
         result._data.at(i) = a._data.at(i) - b._data.at(i);
     }
@@ -111,13 +119,14 @@ Tensor<T> operator-(const Tensor<T>& a, const Tensor<T>& b) {
     return result;
 }
 
-template <typename T>
-Tensor<T> operator*(const Tensor<T>& a, const Tensor<T>& b) {
+template <typename U, typename H>
+auto operator*(const Tensor<U>& a, const Tensor<H>& b) -> Tensor<decltype(std::declval<U>() * std::declval<H>())> {
     if(a.shape() != b.shape()) {
         throw std::runtime_error("Elementwise multiplication cannot proceed as tensor shapes do not match");
     }
 
-    Tensor<T> result(a.shape());
+    using ResultType = decltype(std::declval<U>() * std::declval<H>());
+    Tensor<ResultType> result(a.shape());
     for(std::size_t i = 0;i < a.size();i++) {
         result._data.at(i) = a._data.at(i) * b._data.at(i);
     }
@@ -125,9 +134,10 @@ Tensor<T> operator*(const Tensor<T>& a, const Tensor<T>& b) {
     return result;
 }
 
-template <typename T>
-Tensor<T> operator*(const Tensor<T>& a, const T& scalar) {
-    Tensor<T> result(a.shape());
+template <typename U, typename H>
+auto operator*(const Tensor<U>& a, const H& scalar) -> Tensor<decltype(std::declval<U>() * std::declval<H>())> {
+    using ResultType = decltype(std::declval<U>() * std::declval<H>());
+    Tensor<ResultType> result(a.shape());
     for(std::size_t i = 0;i < a.size();i++) {
         result._data.at(i) = a._data.at(i) * scalar;
     }
@@ -135,14 +145,15 @@ Tensor<T> operator*(const Tensor<T>& a, const T& scalar) {
     return result;
 }
 
-template <typename T>
-Tensor<T> operator*(const T& scalar, const Tensor<T>& a) {
+template <typename U, typename H>
+auto  operator*(const U& scalar, const Tensor<H>& a) -> Tensor<decltype(std::declval<U>() * std::declval<H>())> {
     return a * scalar;
 }
 
-template <typename T>
-Tensor<T> operator/(const Tensor<T>& a, const T& scalar) {
-    Tensor<T> result(a.shape());
+template <typename U, typename H>
+auto operator/(const Tensor<U>& a, const H& scalar) -> Tensor<decltype(std::declval<U>() / std::declval<H>())> {
+    using ResultType = decltype(std::declval<U>() / std::declval<H>());
+    Tensor<ResultType> result(a.shape());
     for(std::size_t i = 0;i < a.size();i++) {
         result._data.at(i) = a._data.at(i) / scalar;
     }

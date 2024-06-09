@@ -35,7 +35,7 @@ public:
 
     Tensor<Expression> matmul(const Tensor<Expression>& a, const Tensor<Expression>& b);
 
-    float computeGradients(const Expression& target, const Expression& source);
+    void computeGradients(const Expression& target);
 private:
     std::random_device rd;
 };

@@ -123,9 +123,8 @@ Tensor<Expression> Context::matmul(const Tensor<Expression>& a, const Tensor<Exp
     return result;
 }
 
-float Context::computeGradients(const Expression& target, const Expression& source) {
+void Context::computeGradients(const Expression& target) {
     target.getData()->backPropagate();
-    return source.getData()->getPartial();
 }
 
 Expression operator+(const Expression& e1, const Expression& e2) {

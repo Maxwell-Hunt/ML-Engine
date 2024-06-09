@@ -12,12 +12,11 @@ friend class ::Context;
 public:
     virtual ~Expression() = default;
     float getValue() { return value; }
+    virtual float getPartial() const { return partial; }
     Context& getContext() const { return context; }
 
 protected:
     Expression(Context& context, float value) : context{context}, value{value}, partial{0} {}
-
-    virtual float getPartial() const { return partial; }
 
     void addToPartial(Expression& other, float value) const { other.partial += value; }
 
@@ -52,6 +51,7 @@ public:
     Context& getContext() const { return expr->getContext(); }
 
     float getValue() const { return expr->getValue(); }
+    float getPartial() const { return expr->getPartial(); }
     std::shared_ptr<Internal::Expression> getData() const { return expr; }
 
 private:

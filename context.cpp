@@ -112,15 +112,26 @@ Tensor<Expression> Context::matmul(const Tensor<Expression>& a, const Tensor<Exp
 
     for(std::size_t i = 0;i < a.shape().at(0);i++) {
         for(std::size_t j = 0;j < b.shape().at(1);j++) {
-            std::vector<std::shared_ptr<Internal::Expression>> temp(a.shape().at(1));
+            Tensor<Expression> temp({a.shape().at(1)});
             for(std::size_t k = 0;k < a.shape().at(1);k++) {
-                temp.at(k) = std::shared_ptr<Internal::Expression>(new Multiplication(a.at({i, k}).getData(), b.at({k, j}).getData(), *this));
+                temp.at({k}) = mult(a.at({i, k}), b.at({k, j}));
             }
-            result.at({i, j}) = Expression(new ReduceAdd(std::move(temp), *this));
+            result.at({i, j}) = reduceAdd(std::move(temp));
         }
     }
 
     return result;
+}
+
+Tensor<Expression> Context::matmul(const Tensor<Expression>& a, const Tensor<float>& b) {
+    Tensor<Expression> B(b.shape());
+    for(std::size_t i = 0;i < b.shape().at(0);i++) {
+        for(std::size_t j = 0;j < b.shape().at(1);j++){
+            B.at({i, j}) = createVariable(b.at({i, j}));
+        } 
+    }
+
+    return matmul(a, B);
 }
 
 void Context::computeGradients(const Expression& target) {

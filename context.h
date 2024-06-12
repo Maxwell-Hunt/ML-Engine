@@ -33,7 +33,9 @@ public:
 
     Expression reduceAdd(const Tensor<Expression>& expressions);
 
+
     Tensor<Expression> matmul(const Tensor<Expression>& a, const Tensor<Expression>& b);
+    Tensor<Expression> matmul(const Tensor<Expression>& a, const Tensor<float>& b);
 
     void computeGradients(const Expression& target);
 private:

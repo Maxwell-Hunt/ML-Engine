@@ -33,6 +33,8 @@ public:
     const T& at(const std::vector<std::size_t>& indices) const;
     typename std::vector<T>::iterator begin();
     typename std::vector<T>::iterator end();
+    typename std::vector<T>::const_iterator begin() const;
+    typename std::vector<T>::const_iterator end() const;
 
     const std::vector<std::size_t>& shape() const;
     std::size_t size() const;
@@ -111,6 +113,12 @@ typename std::vector<T>::iterator Tensor<T>::begin() { return _data.begin(); }
 
 template <typename T>
 typename std::vector<T>::iterator Tensor<T>::end() { return _data.end(); }
+
+template <typename T>
+typename std::vector<T>::const_iterator Tensor<T>::begin() const { return _data.cbegin(); }
+
+template <typename T>
+typename std::vector<T>::const_iterator Tensor<T>::end() const { return _data.cend(); }
 
 template <typename U, typename H>
 auto operator+(const Tensor<U>& a, const Tensor<H>& b) -> Tensor<decltype(std::declval<U>() + std::declval<H>())> {

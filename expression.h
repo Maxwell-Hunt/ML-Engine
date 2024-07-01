@@ -2,12 +2,15 @@
 #define __EXPRESSION__
 
 #include <memory>
+#include <stack>
+#include <vector>
+#include <unordered_set>
 
 class Context;
 
 namespace Internal {
 
-class Expression {
+class Expression : public std::enable_shared_from_this<Expression> {
 friend class ::Context;
 public:
     virtual ~Expression() = default;
@@ -20,17 +23,32 @@ protected:
 
     void addToPartial(Expression& other, float value) const { other.partial += value; }
 
-    void propagate(Expression& other) { other.backPropagateInternal(); }
-
-
     Context& context;
 private:
     void backPropagate() {
         partial = 1;
-        backPropagateInternal();
+        std::stack<std::shared_ptr<Expression>> s;
+        std::unordered_set<std::shared_ptr<Expression>> visited;
+
+        buildTopo(shared_from_this(), s, visited);
+
+        while(!s.empty()) {
+            std::shared_ptr<Expression> ex = s.top(); s.pop();
+            ex->updatePartials();
+        }
     }
 
-    virtual void backPropagateInternal() = 0;
+    void buildTopo(const std::shared_ptr<Expression>& ex, std::stack<std::shared_ptr<Expression>>& s, std::unordered_set<std::shared_ptr<Expression>>& visited) const {
+        if(visited.count(ex)) return;
+        visited.insert(ex);
+        for(const std::shared_ptr<Expression>& next : ex->children()) {
+            buildTopo(next, s, visited);
+        }
+        s.push(ex);
+    }
+
+    virtual void updatePartials() = 0;
+    virtual const std::vector<std::shared_ptr<Expression>> children() const = 0;
     float value;
     float partial;
 };

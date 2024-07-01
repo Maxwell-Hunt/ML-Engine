@@ -7,7 +7,8 @@ class Variable : public Internal::Expression {
 friend class Context;
 private:
     Variable(float value, Context& context);
-    virtual void backPropagateInternal() override;
+    virtual void updatePartials() override;
+    virtual const std::vector<std::shared_ptr<Internal::Expression>> children() const override;
 };
 
 #endif

@@ -37,9 +37,8 @@ for iters in range(1, num_iters + 1):
         accuracy = 0
         for i in range(data_size):
             if(abs(round(output.numpy()[i][0]) - Y[i][0]) < 0.01) : accuracy += 1.0 / data_size
-        error = (-1 / data_size) * tf.reduce_sum( output + output)
-       # errors = Y * tf.math.log(output) + (1 - Y) * tf.math.log(1 - output)
-       # error = -1.0/data_size * tf.reduce_sum(errors)
+        errors = Y * tf.math.log(output) + (1 - Y) * tf.math.log(1 - output)
+        error = -1.0/data_size * tf.reduce_sum(errors)
         
     
     print(f"Iteration {iters}, Error: {error.numpy()}, Accuracy: {accuracy}")

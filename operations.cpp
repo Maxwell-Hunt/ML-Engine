@@ -6,18 +6,23 @@
 ReductionOperation::ReductionOperation(std::vector<std::shared_ptr<Internal::Expression>>&& data, Context& context, float value) :
     Internal::Expression{context, value}, data{data} {}
 
+const std::vector<std::shared_ptr<Internal::Expression>> ReductionOperation::children() const {
+    return data;
+}
+
 BinaryOperation::BinaryOperation(const std::shared_ptr<Internal::Expression>& e1, const std::shared_ptr<Internal::Expression>& e2, Context& context, float value) :
     Internal::Expression{context, value}, e1{e1}, e2{e2} {}
 
-void BinaryOperation::backPropagateInternal() {
-    updatePartials();
-    propagate(*e1);
-    // Propagating gradients backwards twice would result in incorect partials
-    if(e1 != e2) { propagate(*e2); }
+const std::vector<std::shared_ptr<Internal::Expression>>  BinaryOperation::children() const {
+    return {e1, e2};
 }
 
 UnaryOperation::UnaryOperation(const std::shared_ptr<Internal::Expression>& subexpr, Context& context, float value) :
     Internal::Expression{context, value}, subexpr{subexpr} {}
+
+const std::vector<std::shared_ptr<Internal::Expression>> UnaryOperation::children() const {
+    return {subexpr};
+}
 
 Addition::Addition(const std::shared_ptr<Internal::Expression>& e1, const std::shared_ptr<Internal::Expression>& e2, Context& context) :
     BinaryOperation{e1, e2, context, e1->getValue() + e2->getValue()} {}
@@ -56,27 +61,23 @@ void Division::updatePartials() {
 Square::Square(const std::shared_ptr<Internal::Expression>& subexpr, Context& context) :
     UnaryOperation{subexpr, context, subexpr->getValue() * subexpr->getValue()} {}
 
-void Square::backPropagateInternal() {
+void Square::updatePartials() {
     addToPartial(*subexpr, 2 * subexpr->getValue() * getPartial());
-    propagate(*subexpr);
 }
 
 Sigmoid::Sigmoid(const std::shared_ptr<Internal::Expression>& subexpr, Context& context) :
     UnaryOperation{subexpr, context,  1 / (1 + std::exp(-subexpr->getValue()))} {}
 
-void Sigmoid::backPropagateInternal() {
-
+void Sigmoid::updatePartials() {
     // sigmoid' = sigmoid * (1 - sigmoid)
     addToPartial(*subexpr, getValue() * (1 - getValue()) * getPartial());
-    propagate(*subexpr);
 }
 
 Log::Log(const std::shared_ptr<Internal::Expression>& subexpr, Context& context) :
     UnaryOperation{subexpr, context, std::log(subexpr->getValue())} {}
 
-void Log::backPropagateInternal() {
+void Log::updatePartials() {
     addToPartial(*subexpr, (1 / subexpr->getValue()) * getPartial());
-    propagate(*subexpr);
 }
 
 ReduceAdd::ReduceAdd(std::vector<std::shared_ptr<Internal::Expression>>&& data, Context& context) :
@@ -85,8 +86,6 @@ ReduceAdd::ReduceAdd(std::vector<std::shared_ptr<Internal::Expression>>&& data, 
         [](float sum, const std::shared_ptr<Internal::Expression>& next)
             { return sum + next->getValue();})} {}
 
-void ReduceAdd::backPropagateInternal() {
+void ReduceAdd::updatePartials() {
     for(auto& expr : data) addToPartial(*expr, getPartial());
-    // This step relies on the fact that data does not contain duplicate expressions
-    for(auto& expr : data) propagate(*expr);
 }

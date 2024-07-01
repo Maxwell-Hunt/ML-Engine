@@ -30,12 +30,20 @@ public:
     Expression div(const Expression& e1, float val);
 
     Expression square(const Expression& ex);
+    Tensor<Expression> square(const Tensor<Expression>& t);
+
+    Expression sigmoid(const Expression& ex);
+    Tensor<Expression> sigmoid(const Tensor<Expression>& t);
+
+    Expression log(const Expression& ex);
+    Tensor<Expression> log(const Tensor<Expression>& t);
 
     Expression reduceAdd(const Tensor<Expression>& expressions);
 
 
     Tensor<Expression> matmul(const Tensor<Expression>& a, const Tensor<Expression>& b);
     Tensor<Expression> matmul(const Tensor<Expression>& a, const Tensor<float>& b);
+    Tensor<Expression> matmul(const Tensor<float>& a, const Tensor<Expression>& b);
 
     void computeGradients(const Expression& target);
 private:

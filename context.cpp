@@ -90,6 +90,55 @@ Expression Context::square(const Expression& ex) {
     return Expression(sq);
 }
 
+Tensor<Expression> Context::square(const Tensor<Expression>& t) {
+    Tensor<Expression> result(t.shape());
+    auto it1 = result.begin();
+    auto it2 = t.begin();
+    while(it1 != result.end()) {
+        *it1 = square(*it2);
+        ++it1;
+        ++it2;
+    }
+
+    return result;
+}
+
+Expression Context::sigmoid(const Expression& ex) {
+    Sigmoid* s = new Sigmoid(ex.getData(), *this);
+    return Expression(s);
+}
+
+Tensor<Expression> Context::sigmoid(const Tensor<Expression>& t) {
+    Tensor<Expression> result(t.shape());
+    auto it1 = result.begin();
+    auto it2 = t.begin();
+    while(it1 != result.end()) {
+        *it1 = sigmoid(*it2);
+        ++it1;
+        ++it2;
+    }
+
+    return result;
+}
+
+Expression Context::log(const Expression& ex) {
+    Log* l = new Log(ex.getData(), *this);
+    return Expression(l);
+}
+
+Tensor<Expression> Context::log(const Tensor<Expression>& t) {
+    Tensor<Expression> result(t.shape());
+    auto it1 = result.begin();
+    auto it2 = t.begin();
+    while(it1 != result.end()) {
+        *it1 = log(*it2);
+        ++it1;
+        ++it2;
+    }
+
+    return result;
+}
+
 Expression Context::reduceAdd(const Tensor<Expression>& expressions) {
     auto v = expressions.data() | std::views::transform([](const auto& e){ return e.getData(); });
     std::vector<std::shared_ptr<Internal::Expression>> temp(v.begin(), v.end());
@@ -116,13 +165,14 @@ Tensor<Expression> Context::matmul(const Tensor<Expression>& a, const Tensor<Exp
             for(std::size_t k = 0;k < a.shape().at(1);k++) {
                 temp.at({k}) = mult(a.at({i, k}), b.at({k, j}));
             }
-            result.at({i, j}) = reduceAdd(std::move(temp));
+            result.at({i, j}) = reduceAdd(temp);
         }
     }
 
     return result;
 }
 
+// This function as well as the next one is complete garbage.  It should be templated like the other operations
 Tensor<Expression> Context::matmul(const Tensor<Expression>& a, const Tensor<float>& b) {
     Tensor<Expression> B(b.shape());
     for(std::size_t i = 0;i < b.shape().at(0);i++) {
@@ -132,6 +182,18 @@ Tensor<Expression> Context::matmul(const Tensor<Expression>& a, const Tensor<flo
     }
 
     return matmul(a, B);
+}
+
+// This function as well as the previous one is complete garbage. It should be templated like the other operations
+Tensor<Expression> Context::matmul(const Tensor<float>& a, const Tensor<Expression>& b) {
+    Tensor<Expression> A(a.shape());
+    for(std::size_t i = 0;i < a.shape().at(0);i++) {
+        for(std::size_t j = 0;j < a.shape().at(1);j++) {
+            A.at({i, j}) = createVariable(a.at({i, j}));
+        }
+    }
+
+    return matmul(A, b);
 }
 
 void Context::computeGradients(const Expression& target) {

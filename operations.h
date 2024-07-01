@@ -67,6 +67,20 @@ private:
     virtual void backPropagateInternal() override;
 };
 
+class Sigmoid : public UnaryOperation {
+friend class Context;
+private:
+    Sigmoid(const std::shared_ptr<Internal::Expression>& subexpr, Context& context);
+    virtual void backPropagateInternal() override;
+};
+
+class Log : public UnaryOperation {
+friend class Context;
+private:
+    Log(const std::shared_ptr<Internal::Expression>& subexpr, Context& context);
+    virtual void backPropagateInternal() override;
+};
+
 class ReduceAdd : public ReductionOperation {
 friend class Context;
 private:

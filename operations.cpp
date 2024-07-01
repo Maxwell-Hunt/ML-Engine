@@ -1,6 +1,7 @@
 #include "operations.h"
 #include "context.h"
 #include <numeric>
+#include <cmath>
 
 ReductionOperation::ReductionOperation(std::vector<std::shared_ptr<Internal::Expression>>&& data, Context& context, float value) :
     Internal::Expression{context, value}, data{data} {}
@@ -11,7 +12,7 @@ BinaryOperation::BinaryOperation(const std::shared_ptr<Internal::Expression>& e1
 void BinaryOperation::backPropagateInternal() {
     updatePartials();
     propagate(*e1);
-    // Propagating errors backwards twice would result in incorect partials
+    // Propagating gradients backwards twice would result in incorect partials
     if(e1 != e2) { propagate(*e2); }
 }
 
@@ -57,6 +58,24 @@ Square::Square(const std::shared_ptr<Internal::Expression>& subexpr, Context& co
 
 void Square::backPropagateInternal() {
     addToPartial(*subexpr, 2 * subexpr->getValue() * getPartial());
+    propagate(*subexpr);
+}
+
+Sigmoid::Sigmoid(const std::shared_ptr<Internal::Expression>& subexpr, Context& context) :
+    UnaryOperation{subexpr, context,  1 / (1 + std::exp(-subexpr->getValue()))} {}
+
+void Sigmoid::backPropagateInternal() {
+
+    // sigmoid' = sigmoid * (1 - sigmoid)
+    addToPartial(*subexpr, getValue() * (1 - getValue()) * getPartial());
+    propagate(*subexpr);
+}
+
+Log::Log(const std::shared_ptr<Internal::Expression>& subexpr, Context& context) :
+    UnaryOperation{subexpr, context, std::log(subexpr->getValue())} {}
+
+void Log::backPropagateInternal() {
+    addToPartial(*subexpr, (1 / subexpr->getValue()) * getPartial());
     propagate(*subexpr);
 }
 

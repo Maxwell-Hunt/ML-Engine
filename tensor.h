@@ -13,6 +13,9 @@ class Tensor {
     friend auto operator+(const Tensor<U>& a, const Tensor<H>& b) -> Tensor<decltype(std::declval<U>() + std::declval<H>())>;
 
     template <typename U, typename H>
+    friend auto operator-(const U& scalar, const Tensor<H>& a) -> Tensor<decltype(std::declval<U>() - std::declval<H>())>;
+
+    template <typename U, typename H>
     friend auto operator-(const Tensor<U>& a, const Tensor<H>& b) -> Tensor<decltype(std::declval<U>() - std::declval<H>())>;
 
     template <typename U, typename H>
@@ -130,6 +133,17 @@ auto operator+(const Tensor<U>& a, const Tensor<H>& b) -> Tensor<decltype(std::d
     Tensor<ResultType> result(a.shape());
     for(std::size_t i = 0;i < a.size();i++) {
         result._data.at(i) = a._data.at(i) + b._data.at(i);
+    }
+
+    return result;
+}
+
+template <typename U, typename H>
+auto operator-(const U& scalar, const Tensor<H>& a) -> Tensor<decltype(std::declval<U>() - std::declval<H>())> {
+    using ResultType = decltype(std::declval<U>() - std::declval<H>());
+    Tensor<ResultType> result(a.shape());
+    for(std::size_t i = 0;i < a.size();i++) {
+        result._data.at(i) = scalar - a._data.at(i);
     }
 
     return result;

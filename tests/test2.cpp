@@ -1,18 +1,27 @@
-#include <memory>
-#include <unordered_set>
 #include <iostream>
 
+template <typename T>
 class A {
 public:
-    A(int x) : x{x} {}
+    A(T x, T y) : x{x}, y{y} {}
+    T x;
+    T y;
+};
+
+template <typename T>
+int operator*(const A<T>& a, const A<T>& b) { return a.x * b.y; }
+
+class B {
+public:
+    B(int x) : x{x} {}
     int x;
 };
 
-int main() {
-    std::shared_ptr<A> a(new A(5));
-    std::shared_ptr<A> b = a;
+int operator*(const B& a, const B& b) { return a.x * b.x; }
 
-    std::unordered_set<std::shared_ptr<A>> s;
-    s.insert(a);
-    std::cout << s.count(b);
+int main() {
+    A a(B(5), B(2));
+    A b(B(3), B(4));
+
+    std::cout << a * b;
 }

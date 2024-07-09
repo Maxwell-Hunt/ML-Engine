@@ -2,13 +2,19 @@
 #define __VARIABLE
 
 #include "expression.h"
+#include "context.h"
 
+namespace Internal {
+    
 class Variable : public Internal::Expression {
-friend class Context;
+friend class Engine::Expression Engine::createVariable(float val);
 private:
-    Variable(float value, Context& context);
+    Variable(float value);
     virtual void updatePartials() override;
-    virtual const std::vector<std::shared_ptr<Internal::Expression>> children() const override;
+    virtual std::vector<std::shared_ptr<Internal::Expression>> children() const override;
 };
+
+}
+
 
 #endif

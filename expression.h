@@ -6,24 +6,20 @@
 #include <vector>
 #include <unordered_set>
 
-class Context;
+#include "context.h"
 
 namespace Internal {
 
 class Expression : public std::enable_shared_from_this<Expression> {
-friend class ::Context;
+friend void Engine::computeGradients(const Engine::Expression& target);
 public:
     virtual ~Expression() = default;
     float getValue() { return value; }
     virtual float getPartial() const { return partial; }
-    Context& getContext() const { return context; }
 
 protected:
-    Expression(Context& context, float value) : context{context}, value{value}, partial{0} {}
-
+    Expression(float value) : value{value}, partial{0} {}
     void addToPartial(Expression& other, float value) const { other.partial += value; }
-
-    Context& context;
 private:
     void backPropagate() {
         partial = 1;
@@ -48,12 +44,14 @@ private:
     }
 
     virtual void updatePartials() = 0;
-    virtual const std::vector<std::shared_ptr<Expression>> children() const = 0;
+    virtual std::vector<std::shared_ptr<Expression>> children() const = 0;
     float value;
     float partial;
 };
 
 }
+
+namespace Engine {
 
 class Expression {
 public:
@@ -66,8 +64,6 @@ public:
     Expression& operator=(const Expression&) = delete;
     Expression& operator=(Expression&& expr) { this->expr = std::move(expr.expr); return *this; }
 
-    Context& getContext() const { return expr->getContext(); }
-
     float getValue() const { return expr->getValue(); }
     float getPartial() const { return expr->getPartial(); }
     std::shared_ptr<Internal::Expression> getData() const { return expr; }
@@ -75,5 +71,8 @@ public:
 private:
     std::shared_ptr<Internal::Expression> expr;
 };
+
+}
+
 
 #endif

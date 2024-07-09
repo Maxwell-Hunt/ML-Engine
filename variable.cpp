@@ -1,6 +1,8 @@
 #include "variable.h"
 
-Variable::Variable(float value, Context& context) : Internal::Expression{context, value} {}
+Internal::Variable::Variable(float value) : Internal::Expression{value} {}
 
-void Variable::updatePartials() {}
-const std::vector<std::shared_ptr<Internal::Expression>> Variable::children() const { return std::vector<std::shared_ptr<Internal::Expression>>(); }
+void Internal::Variable::updatePartials() {}
+std::vector<std::shared_ptr<Internal::Expression>> Internal::Variable::children() const { 
+    return std::vector<std::shared_ptr<Internal::Expression>>(); 
+}

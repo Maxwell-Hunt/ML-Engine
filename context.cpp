@@ -2,96 +2,101 @@
 #include "variable.h"
 #include "operations.h"
 #include "tensor.h"
+#include "expression.h"
 #include <ranges>
 
 // TODO: Turn this class into a collection of functions
 
-Expression Context::createVariable(float val) {
-    Variable* v = new Variable(val, *this);
-    return Expression(v);
+namespace Engine {
+
+static std::random_device rd;
+
+Engine::Expression createVariable(float val) {
+    Internal::Variable* v = new Internal::Variable(val);
+    return Engine::Expression(v);
 }
 
-Tensor<Expression> Context::createZeroTensor(const std::vector<std::size_t>& shape) {
-    Tensor<Expression> t(shape);
-    for(Expression& ex : t) ex = createVariable(0.f);
+Tensor<Engine::Expression> createZeroTensor(const std::vector<std::size_t>& shape) {
+    Tensor<Engine::Expression> t(shape);
+    for(Engine::Expression& ex : t) ex = createVariable(0.f);
     return t;
 }
 
-Tensor<Expression> Context::createRandomTensor(const std::vector<std::size_t>& shape) {
+Tensor<Engine::Expression> createRandomTensor(const std::vector<std::size_t>& shape) {
     std::mt19937 gen(rd());
     std::uniform_real_distribution<> dis(-1.5f, 1.5f);
-    Tensor<Expression> t(shape);
-    for(Expression& ex : t) ex = createVariable(dis(gen));
+    Tensor<Engine::Expression> t(shape);
+    for(Engine::Expression& ex : t) ex = createVariable(dis(gen));
     return t;
 }
 
-Expression Context::add(const Expression& e1, const Expression& e2) {
-    Addition* sum = new Addition(e1.getData(), e2.getData(), *this);
-    return Expression(sum);
+Engine::Expression add(const Engine::Expression& e1, const Engine::Expression& e2) {
+    Internal::Addition* sum = new Internal::Addition(e1.getData(), e2.getData());
+    return Engine::Expression(sum);
 }
 
-Expression Context::add(float val, const Expression& e2) {
-    Expression e1 = createVariable(val);
+Engine::Expression add(float val, const Engine::Expression& e2) {
+    Engine::Expression e1 = createVariable(val);
     return add(e1, e2);
 }
 
-Expression Context::add(const Expression& e1, float val) {
-    Expression e2 = createVariable(val);
+Engine::Expression add(const Engine::Expression& e1, float val) {
+    Engine::Expression e2 = createVariable(val);
     return add(e1, e2);
 }
 
-Expression Context::sub(const Expression& e1, const Expression& e2) {
-    Subtraction* diff = new Subtraction(e1.getData(), e2.getData(), *this);
-    return Expression(diff);
+Engine::Expression sub(const Engine::Expression& e1, const Engine::Expression& e2) {
+    Internal::Subtraction* diff = new Internal::Subtraction(e1.getData(), e2.getData());
+    return Engine::Expression(diff);
 }
 
-Expression Context::sub(float val, const Expression& e2) {
-    Expression e1 = createVariable(val);
+Engine::Expression sub(float val, const Engine::Expression& e2) {
+    Engine::Expression e1 = createVariable(val);
     return sub(e1, e2);
 }
 
-Expression Context::sub(const Expression& e1, float val) {
-    Expression e2 = createVariable(val);
+Engine::Expression sub(const Engine::Expression& e1, float val) {
+    Engine::Expression e2 = createVariable(val);
     return sub(e1, e2);
 }
 
-Expression Context::mult(const Expression& e1, const Expression& e2) {
-    Multiplication* prod = new Multiplication(e1.getData(), e2.getData(), *this);
-    return Expression(prod);
+Engine::Expression mult(const Engine::Expression& e1, const Engine::Expression& e2) {
+    Internal::Multiplication* prod = new Internal::Multiplication(e1.getData(), e2.getData());
+    return Engine::Expression(prod);
 }
 
-Expression Context::mult(float val, const Expression& e2) {
-    Expression e1 = createVariable(val);
+Engine::Expression mult(float val, const Engine::Expression& e2) {
+    Engine::Expression e1 = createVariable(val);
     return mult(e1, e2);
 }
 
-Expression Context::mult(const Expression& e1, float val) {
-    Expression e2 = createVariable(val);
+Engine::Expression mult(const Engine::Expression& e1, float val) {
+    Engine::Expression e2 = createVariable(val);
     return mult(e1, e2);
 }
 
-Expression Context::div(const Expression& e1, const Expression& e2) {
-    Division* quotient = new Division(e1.getData(), e2.getData(), *this);
-    return Expression(quotient);
+Engine::Expression div(const Engine::Expression& e1, const Engine::Expression& e2) {
+    Internal::Division* quotient = new Internal::Division(e1.getData(), e2.getData());
+    return Engine::Expression(quotient);
 }
 
-Expression Context::div(float val, const Expression& e2) {
-    Expression e1 = createVariable(val);
+Engine::Expression div(float val, const Engine::Expression& e2) {
+    Engine::Expression e1 = createVariable(val);
     return div(e1, e2);
 }
 
-Expression Context::div(const Expression& e1, float val) {
-    Expression e2 = createVariable(val);
+Engine::Expression div(const Engine::Expression& e1, float val) {
+    Engine::Expression e2 = createVariable(val);
     return div(e1, e2);
 }
 
-Expression Context::square(const Expression& ex) {
-    Square* sq = new Square(ex.getData(), *this);
-    return Expression(sq);
+Engine::Expression square(const Engine::Expression& ex) {
+    Internal::Square* sq = new Internal::Square(ex.getData());
+    return Engine::Expression(sq);
 }
 
-Tensor<Expression> Context::square(const Tensor<Expression>& t) {
-    Tensor<Expression> result(t.shape());
+Tensor<Engine::Expression> square(const Tensor<Engine::Expression>& t) {
+    Tensor<Engine::Expression> result(t.shape());
     auto it1 = result.begin();
     auto it2 = t.begin();
     while(it1 != result.end()) {
@@ -103,13 +108,13 @@ Tensor<Expression> Context::square(const Tensor<Expression>& t) {
     return result;
 }
 
-Expression Context::sigmoid(const Expression& ex) {
-    Sigmoid* s = new Sigmoid(ex.getData(), *this);
-    return Expression(s);
+Engine::Expression sigmoid(const Engine::Expression& ex) {
+    Internal::Sigmoid* s = new Internal::Sigmoid(ex.getData());
+    return Engine::Expression(s);
 }
 
-Tensor<Expression> Context::sigmoid(const Tensor<Expression>& t) {
-    Tensor<Expression> result(t.shape());
+Tensor<Engine::Expression> sigmoid(const Tensor<Engine::Expression>& t) {
+    Tensor<Engine::Expression> result(t.shape());
     auto it1 = result.begin();
     auto it2 = t.begin();
     while(it1 != result.end()) {
@@ -121,13 +126,13 @@ Tensor<Expression> Context::sigmoid(const Tensor<Expression>& t) {
     return result;
 }
 
-Expression Context::log(const Expression& ex) {
-    Log* l = new Log(ex.getData(), *this);
-    return Expression(l);
+Engine::Expression log(const Engine::Expression& ex) {
+    Internal::Log* l = new Internal::Log(ex.getData());
+    return Engine::Expression(l);
 }
 
-Tensor<Expression> Context::log(const Tensor<Expression>& t) {
-    Tensor<Expression> result(t.shape());
+Tensor<Engine::Expression> log(const Tensor<Engine::Expression>& t) {
+    Tensor<Engine::Expression> result(t.shape());
     auto it1 = result.begin();
     auto it2 = t.begin();
     while(it1 != result.end()) {
@@ -139,14 +144,14 @@ Tensor<Expression> Context::log(const Tensor<Expression>& t) {
     return result;
 }
 
-Expression Context::reduceAdd(const Tensor<Expression>& expressions) {
+Engine::Expression reduceAdd(const Tensor<Engine::Expression>& expressions) {
     auto v = expressions.data() | std::views::transform([](const auto& e){ return e.getData(); });
     std::vector<std::shared_ptr<Internal::Expression>> temp(v.begin(), v.end());
-    ReduceAdd* sum = new ReduceAdd(std::move(temp), *this);
-    return Expression(sum);
+    Internal::ReduceAdd* sum = new Internal::ReduceAdd(std::move(temp));
+    return Engine::Expression(sum);
 }
 
-Tensor<Expression> Context::matmul(const Tensor<Expression>& a, const Tensor<Expression>& b) {
+Tensor<Engine::Expression> matmul(const Tensor<Engine::Expression>& a, const Tensor<Engine::Expression>& b) {
     std::size_t dimsA = a.shape().size();
     std::size_t dimsB = b.shape().size();
     if(dimsA != 2 || dimsB != 2) {
@@ -157,11 +162,11 @@ Tensor<Expression> Context::matmul(const Tensor<Expression>& a, const Tensor<Exp
         throw std::runtime_error("Dimensions incorrect for matrix multiplication");
     }
     
-    Tensor<Expression> result({a.shape().at(0), b.shape().at(1)});
+    Tensor<Engine::Expression> result({a.shape().at(0), b.shape().at(1)});
 
     for(std::size_t i = 0;i < a.shape().at(0);i++) {
         for(std::size_t j = 0;j < b.shape().at(1);j++) {
-            Tensor<Expression> temp({a.shape().at(1)});
+            Tensor<Engine::Expression> temp({a.shape().at(1)});
             for(std::size_t k = 0;k < a.shape().at(1);k++) {
                 temp.at({k}) = mult(a.at({i, k}), b.at({k, j}));
             }
@@ -173,8 +178,8 @@ Tensor<Expression> Context::matmul(const Tensor<Expression>& a, const Tensor<Exp
 }
 
 // This function as well as the next one is complete garbage.  It should be templated like the other operations
-Tensor<Expression> Context::matmul(const Tensor<Expression>& a, const Tensor<float>& b) {
-    Tensor<Expression> B(b.shape());
+Tensor<Engine::Expression> matmul(const Tensor<Engine::Expression>& a, const Tensor<float>& b) {
+    Tensor<Engine::Expression> B(b.shape());
     for(std::size_t i = 0;i < b.shape().at(0);i++) {
         for(std::size_t j = 0;j < b.shape().at(1);j++){
             B.at({i, j}) = createVariable(b.at({i, j}));
@@ -185,8 +190,8 @@ Tensor<Expression> Context::matmul(const Tensor<Expression>& a, const Tensor<flo
 }
 
 // This function as well as the previous one is complete garbage. It should be templated like the other operations
-Tensor<Expression> Context::matmul(const Tensor<float>& a, const Tensor<Expression>& b) {
-    Tensor<Expression> A(a.shape());
+Tensor<Engine::Expression> matmul(const Tensor<float>& a, const Tensor<Engine::Expression>& b) {
+    Tensor<Engine::Expression> A(a.shape());
     for(std::size_t i = 0;i < a.shape().at(0);i++) {
         for(std::size_t j = 0;j < a.shape().at(1);j++) {
             A.at({i, j}) = createVariable(a.at({i, j}));
@@ -196,62 +201,64 @@ Tensor<Expression> Context::matmul(const Tensor<float>& a, const Tensor<Expressi
     return matmul(A, b);
 }
 
-void Context::computeGradients(const Expression& target) {
+void computeGradients(const Engine::Expression& target) {
     target.getData()->backPropagate();
 }
 
-Expression operator+(const Expression& e1, const Expression& e2) {
-    return e1.getContext().add(e1, e2);
+Engine::Expression operator+(const Engine::Expression& e1, const Engine::Expression& e2) {
+    return Engine::add(e1, e2);
 }
 
-Expression operator+(const Expression& e1, float val) {
-    return e1.getContext().add(e1, val);
+Engine::Expression operator+(const Engine::Expression& e1, float val) {
+    return Engine::add(e1, val);
 }
 
-Expression operator+(float val, const Expression& e2) {
-    return e2.getContext().add(val, e2);
+Engine::Expression operator+(float val, const Engine::Expression& e2) {
+    return Engine::add(val, e2);
 } 
 
-Expression operator-(const Expression& e1, const Expression& e2) {
-    return e1.getContext().sub(e1, e2);
+Engine::Expression operator-(const Engine::Expression& e1, const Engine::Expression& e2) {
+    return Engine::sub(e1, e2);
 }
 
-Expression operator-(const Expression& e1, float val) {
-    return e1.getContext().sub(e1, val);
+Engine::Expression operator-(const Engine::Expression& e1, float val) {
+    return Engine::sub(e1, val);
 }
 
-Expression operator-(float val, const Expression& e2) {
-    return e2.getContext().sub(val, e2);
+Engine::Expression operator-(float val, const Engine::Expression& e2) {
+    return Engine::sub(val, e2);
 } 
 
-void operator+=(Expression& e1, const Expression& e2) {
+void operator+=(Engine::Expression& e1, const Engine::Expression& e2) {
     e1 = e1 + e2;
 }
 
-void operator-=(Expression& e1, const Expression& e2) {
+void operator-=(Engine::Expression& e1, const Engine::Expression& e2) {
     e1 = e1 - e2;
 }
 
-Expression operator*(const Expression& e1, const Expression& e2) {
-    return e1.getContext().mult(e1, e2);
+Engine::Expression operator*(const Engine::Expression& e1, const Engine::Expression& e2) {
+    return Engine::mult(e1, e2);
 }
 
-Expression operator*(const Expression& e1, float val) {
-    return e1.getContext().mult(e1, val);
+Engine::Expression operator*(const Engine::Expression& e1, float val) {
+    return Engine::mult(e1, val);
 }
 
-Expression operator*(float val, const Expression& e2) {
-    return e2.getContext().mult(val, e2);
+Engine::Expression operator*(float val, const Engine::Expression& e2) {
+    return Engine::mult(val, e2);
 }
 
-Expression operator/(const Expression& e1, const Expression& e2) {
-    return e1.getContext().div(e1, e2);
+Engine::Expression operator/(const Engine::Expression& e1, const Engine::Expression& e2) {
+    return div(e1, e2);
 }
 
-Expression operator/(const Expression& e1, float val) {
-    return e1.getContext().div(e1, val);
+Engine::Expression operator/(const Engine::Expression& e1, float val) {
+    return div(e1, val);
 }
 
-Expression operator/(float val, const Expression& e2) {
-    return e2.getContext().div(val, e2);
+Engine::Expression operator/(float val, const Engine::Expression& e2) {
+    return div(val, e2);
+}
+
 }

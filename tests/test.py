@@ -21,16 +21,16 @@ def generate_data(n):
 
 
 learning_rate = 1
-data_size = 9
+data_size = 36
 X, Y = generate_data(data_size)
 
-w1 = tf.Variable(np.ones((2, 2)).astype(np.float32) / 2.0, dtype=tf.float32)
-w2 = tf.Variable(np.ones((2, 1)).astype(np.float32) / 2.0, dtype=tf.float32)
+w1 = tf.Variable(np.ones((2, 20)).astype(np.float32) / 2.0, dtype=tf.float32)
+w2 = tf.Variable(np.ones((20, 1)).astype(np.float32) / 2.0, dtype=tf.float32)
 
 num_iters = 100
 for iters in range(1, num_iters + 1):
     with tf.GradientTape() as tape:
-        hidden = tf.matmul(X, w1)
+        hidden = tf.keras.activations.sigmoid(tf.matmul(X, w1))
         output = tf.keras.activations.sigmoid(tf.matmul(hidden, w2))
 
         # accuracy = tf.reduce_mean(tf.cast(tf.equal(tf.round(output), Y), tf.float32))

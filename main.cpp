@@ -2,6 +2,7 @@
 #include <vector>
 #include <random>
 #include <cmath>
+#include "expression.h"
 #include "context.h"
 
 template <typename T>
@@ -62,34 +63,30 @@ std::pair<Tensor<float>, Tensor<float>> generate2D(std::size_t size) {
     return {X, Y};
 }
 
-// Using a mean squared error based loss function makes everything work perfectly.  However using
-// binary cross entropy doesn't work for some unknown reason
-// I have been so far unable to replicate this bug in any way
 void TensorExample() {
-    Context context;
+    using namespace Engine;
 
     const float alpha = 1;
-    const std::size_t DATA_SIZE = 9;
+    const std::size_t DATA_SIZE = 36;
     const auto& [X, Y] = generate2D(DATA_SIZE);
 
     //for(float f : Y) std::cout << f << std::endl;
 
-    Tensor<Expression> w1({2, 2});
-    Tensor<Expression> w2({2, 1});
-    for(Expression& ex : w1) ex = context.createVariable(0.5f);
-    for(Expression& ex : w2) ex = context.createVariable(0.5f);
+    Tensor<Expression> w1({2, 20});
+    Tensor<Expression> w2({20, 1});
+    for(Expression& ex : w1) ex = createVariable(0.5f);
+    for(Expression& ex : w2) ex = createVariable(0.5f);
 
     const std::size_t NUM_ITERS = 100;
 
     for(std::size_t iteration = 1;iteration <= NUM_ITERS;iteration++) {
-        Tensor<Expression> hidden = context.matmul(X, w1);
-        Tensor<Expression> output = context.sigmoid(context.matmul(hidden, w2));
+        Tensor<Expression> hidden = sigmoid(matmul(X, w1));
+        Tensor<Expression> output = sigmoid(matmul(hidden, w2));
         // IN PYTHON: errors = Y * tf.math.log(output) + (1 - Y) * tf.math.log(1 - output)
 
-        // Tensor<Expression> errors = Y * context.log(output) + (1.f - Y) * context.log(1.f - output);
+        Tensor<Expression> errors = Y * log(output) + (1.f - Y) * log(1.f - output);
         //for(Expression& ex : errors) std::cout << ex.getValue() << std::endl;
-        // Expression error = (-1.f / DATA_SIZE) * context.reduceAdd(errors);
-        Expression error = (-1.f / DATA_SIZE) * context.reduceAdd(output + output);
+        Expression error = (-1.f / DATA_SIZE) * reduceAdd(errors);
 
         float accuracy = 0;
         for(std::size_t i = 0;i < DATA_SIZE;i++) {
@@ -98,7 +95,7 @@ void TensorExample() {
 
         std::cout << "Iteration: " << iteration << " ERROR: " << error.getValue() << " ACCURACY: " << accuracy << std::endl;
 
-        context.computeGradients(error);
+        computeGradients(error);
 
         // for(Expression& ex : w1) std::cout << ex.getPartial() << std::endl;
         // std::cout << std::endl;
@@ -108,13 +105,13 @@ void TensorExample() {
         // std::cout << std::endl;
         // for(Expression& ex : output) std::cout << ex.getPartial() << std::endl;
 
-        for(Expression& ex : w1) ex = context.createVariable(ex.getValue() - alpha * ex.getPartial());
-        for(Expression& ex : w2) ex = context.createVariable(ex.getValue() - alpha * ex.getPartial());
+        for(Expression& ex : w1) ex = createVariable(ex.getValue() - alpha * ex.getPartial());
+        for(Expression& ex : w2) ex = createVariable(ex.getValue() - alpha * ex.getPartial());
     }
 }
 
 void MatrixExample() {
-    Context context;
+    using namespace Engine;
     Tensor<float> F({2, 2});
     Tensor<Expression> A({2, 2});
     Tensor<Expression> B({2, 1});
@@ -124,19 +121,19 @@ void MatrixExample() {
     F.at({0, 2}) = 0.1;
     F.at({0, 3}) = 3;
 
-    A.at({0, 0}) = context.createVariable(0.0013);
-    A.at({0, 1}) = context.createVariable(0.002);
-    A.at({1, 0}) = context.createVariable(0.0018);
-    A.at({1, 1}) = context.createVariable(0.005);
+    A.at({0, 0}) = createVariable(0.0013);
+    A.at({0, 1}) = createVariable(0.002);
+    A.at({1, 0}) = createVariable(0.0018);
+    A.at({1, 1}) = createVariable(0.005);
 
-    B.at({0, 0}) = context.createVariable(0.007);
-    B.at({1, 0}) = context.createVariable(0.0011);
+    B.at({0, 0}) = createVariable(0.007);
+    B.at({1, 0}) = createVariable(0.0011);
 
-    Tensor<Expression> C = context.sigmoid(context.matmul(context.matmul(F, A), B));
-    Tensor<Expression> D = 1 * context.log(1-C);
+    Tensor<Expression> C = sigmoid(matmul(matmul(F, A), B));
+    Tensor<Expression> D = 1 * log(1-C);
 
-    Expression result = (1.f/5.f) * context.reduceAdd(D);
-    context.computeGradients(result);
+    Expression result = (1.f/5.f) * reduceAdd(D);
+    computeGradients(result);
 
     for(Expression& ex : A) std::cout << ex.getPartial() << std::endl;
     std::cout << std::endl;
@@ -145,36 +142,40 @@ void MatrixExample() {
 
 
 void simpleExample() {
-    Context context;
-    Expression X = context.createVariable(0.5);
-    Expression Y =  0.f * context.log(X) + (1.f - 0.f) * (context.log(1.f - X));
-    context.computeGradients(Y);
-    std::cout << X.getPartial();
+    using namespace Engine;
+    Expression f = createVariable(5.f);
+    Expression a = log(f);
+    Expression b = square(a);
+    Expression c = log(a);
+    Expression d = mult(b, c);
+    Expression e = square(d);
+    computeGradients(e);
+    std::cout << f.getPartial();
 }
 
 
 // Corresponds to linear.py in test files
 void linearExample() {
-    Context context;
-
+    using namespace Engine;
     const std::size_t DATA_SIZE = 100;
-    const auto [X, Y] = generateData(DATA_SIZE);
+    const auto& [X, Y] = generateData(DATA_SIZE);
+    
 
-    Expression w = context.createVariable(1.f);
+    Expression w = createVariable(1.f);
     float alpha = 0.01;
 
     const unsigned int NUM_ITERATIONS = 25;
 
     for(std::size_t iteration = 1;iteration <= NUM_ITERATIONS;iteration++) {
         Tensor<Expression> result = X * w;
-        Tensor<Expression> squaredError = context.square(result - Y);
-        Expression mse = context.reduceAdd(squaredError) / (float)DATA_SIZE;
+        Tensor<Expression> squaredError = square(result - Y);
+        Expression mse = reduceAdd(squaredError) / (float)DATA_SIZE;
 
          std::cout << "W: " << w.getValue() << " MSE: " << mse.getValue() /*<< " Gradient: " << gradient*/ << std::endl;
 
-        context.computeGradients(mse);
+        computeGradients(mse);
         float gradient = w.getPartial();
-        w = context.createVariable(w.getValue() - alpha * gradient);
+        w = createVariable(w.getValue() - alpha * gradient);
     }
 }
 

@@ -89,6 +89,13 @@ private:
     virtual void updatePartials() override;
 };
 
+class Relu : public UnaryOperation {
+friend Engine::Expression Engine::relu(const Engine::Expression& ex);
+private:
+    Relu(const std::shared_ptr<Expression>& subexpr);
+    virtual void updatePartials();
+};
+
 class Log : public UnaryOperation {
 friend Engine::Expression Engine::log(const Engine::Expression& ex);
 private:

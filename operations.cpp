@@ -77,6 +77,13 @@ void Sigmoid::updatePartials() {
     addToPartial(*subexpr, getValue() * (1 - getValue()) * getPartial());
 }
 
+Relu::Relu(const std::shared_ptr<Internal::Expression>& subexpr):
+    UnaryOperation{subexpr, (subexpr->getValue() > 0) ? subexpr->getValue() : 0.f} {}
+
+void Relu::updatePartials() {
+    addToPartial(*subexpr, ((subexpr->getValue() > 0) ? 1.f : 0.f) * getPartial());
+}
+
 Log::Log(const std::shared_ptr<Internal::Expression>& subexpr) :
     UnaryOperation{subexpr, std::log(subexpr->getValue())} {}
 

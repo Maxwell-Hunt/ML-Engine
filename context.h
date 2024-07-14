@@ -35,6 +35,9 @@ namespace Engine {
     Engine::Expression sigmoid(const Engine::Expression& ex);
     Tensor<Engine::Expression> sigmoid(const Tensor<Engine::Expression>& t);
 
+    Engine::Expression relu(const Engine::Expression& ex);
+    Tensor<Engine::Expression> relu(const Tensor<Engine::Expression>& t);
+
     Engine::Expression log(const Engine::Expression& ex);
     Tensor<Engine::Expression> log(const Tensor<Engine::Expression>& t);
 

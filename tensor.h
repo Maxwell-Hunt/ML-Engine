@@ -4,6 +4,7 @@
 #include <vector>
 #include <numeric>
 #include <stdexcept>
+#include <algorithm>
 #include <type_traits>
 
 template <typename T>
@@ -125,16 +126,23 @@ typename std::vector<T>::const_iterator Tensor<T>::end() const { return _data.ce
 
 template <typename U, typename H>
 auto operator+(const Tensor<U>& a, const Tensor<H>& b) -> Tensor<decltype(std::declval<U>() + std::declval<H>())> {
-    if(a.shape() != b.shape()) {
+    if(!std::ranges::equal(a.shape(), b.shape()) &&
+        !std::equal(++a.shape().begin(), a.shape().end(), b.shape().begin(), b.shape().end())) {
         throw std::runtime_error("Addition cannot proceed as tensor shapes do not match");
     }
 
     using ResultType = decltype(std::declval<U>() + std::declval<H>());
     Tensor<ResultType> result(a.shape());
-    for(std::size_t i = 0;i < a.size();i++) {
-        result._data.at(i) = a._data.at(i) + b._data.at(i);
+    if(std::ranges::equal(a.shape(), b.shape())) {
+        for(std::size_t i = 0;i < a.size();i++) {
+            result._data.at(i) = a._data.at(i) + b._data.at(i);
+        }
+    } else {
+        for(std::size_t i = 0;i < a.size();i++) {
+            result._data.at(i) = a._data.at(i) + b._data.at(i % b._data.size());
+        }
     }
-
+    
     return result;
 }
 

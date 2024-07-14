@@ -24,7 +24,7 @@ Tensor<Engine::Expression> createZeroTensor(const std::vector<std::size_t>& shap
 
 Tensor<Engine::Expression> createRandomTensor(const std::vector<std::size_t>& shape) {
     std::mt19937 gen(rd());
-    std::uniform_real_distribution<> dis(-1.5f, 1.5f);
+    std::uniform_real_distribution<> dis(-1.2f, 1.2f);
     Tensor<Engine::Expression> t(shape);
     for(Engine::Expression& ex : t) ex = createVariable(dis(gen));
     return t;
@@ -119,6 +119,24 @@ Tensor<Engine::Expression> sigmoid(const Tensor<Engine::Expression>& t) {
     auto it2 = t.begin();
     while(it1 != result.end()) {
         *it1 = sigmoid(*it2);
+        ++it1;
+        ++it2;
+    }
+
+    return result;
+}
+
+Engine::Expression relu(const Engine::Expression& ex) {
+    Internal::Relu* r = new Internal::Relu(ex.getData());
+    return Engine::Expression(r);
+}
+
+Tensor<Engine::Expression> relu(const Tensor<Engine::Expression>& t) {
+    Tensor<Engine::Expression> result(t.shape());
+    auto it1 = result.begin();
+    auto it2 = t.begin();
+    while(it1 != result.end()) {
+        *it1 = relu(*it2);
         ++it1;
         ++it2;
     }

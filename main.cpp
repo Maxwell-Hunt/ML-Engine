@@ -2,8 +2,12 @@
 #include <vector>
 #include <random>
 #include <cmath>
+#include <fstream>
+#include <sstream>
+#include <array>
 #include "expression.h"
 #include "context.h"
+#include "network.h"
 
 template <typename T>
 void printTensor(const Tensor<T>& tensor) {
@@ -179,6 +183,118 @@ void linearExample() {
     }
 }
 
+
+Engine::Expression mse(const Tensor<Engine::Expression>& Yhat, const Tensor<float>& Y) {
+    return Engine::reduceAdd(square(Yhat - Y)) / Y.shape().at({Y.shape().size()-1});
+}
+
+Engine::Expression binarycrossentropy(const Tensor<Engine::Expression>& Yhat, const Tensor<float>& Y) {
+    using namespace Engine;
+    float size = Y.shape().at(0);
+    return (-1.0 / size) * reduceAdd(Y * log(Yhat) + (1 - Y) * log(1 - Yhat));
+}
+
+void networkExample() {
+    const auto& [X, Y] = generate2DRandom(1);
+    Network nn(0.1, [](const Tensor<Engine::Expression>& Yhat, const Tensor<float>& Y){ return mse(Yhat, Y); });
+    nn.addLayer(new Dense(2, 128, [](const Tensor<Engine::Expression>& t) { return Engine::sigmoid(t); }));
+    nn.addLayer(new Dense(128, 128, [](const Tensor<Engine::Expression>& t) { return Engine::sigmoid(t); }));
+    nn.addLayer(new Dense(128, 1, [](const Tensor<Engine::Expression>& t) { return Engine::sigmoid(t); }));
+
+    nn.fit(X, Y, 100);
+}
+
+void mnistExample() {
+    using namespace Engine;
+    std::cout << "Loading Data...\n";
+    std::ifstream train_file("./data/mnist_train.csv");
+    std::string s;
+    std::getline(train_file, s);
+
+    const std::size_t numDataPoints = 50000;
+    std::vector<Tensor<float>> X(numDataPoints, Tensor<float>({1, 784}));
+    std::vector<Tensor<float>> Y(numDataPoints, Tensor<float>({1, 10}));
+    
+    std::size_t i = 0;
+    while(std::getline(train_file, s) && i < numDataPoints) {
+        std::istringstream line(std::move(s));
+        std::string temp;
+        std::getline(line, temp, ',');
+        std::size_t label = std::stoull(temp);
+        for(std::size_t j = 0;j < 10;j++) Y.at(i).at({0, j}) = (j == label) ? 1 : 0;
+        auto it = X.at(i).begin();
+        while(std::getline(line, temp, ',')) {
+            *it = std::stof(temp) / 255.f;
+            ++it;
+        }
+        i++;
+    }
+    std::cout << "Data Loaded\n";
+    std::cout << "Creating Model...\n";
+    Network nn(0.1, [](const Tensor<Expression>& Yhat, const Tensor<float>& Y) { return mse(Yhat, Y); });
+    nn.addLayer(new Dense(784, 256, [](const Tensor<Expression>& t) { return sigmoid(t); }));
+    nn.addLayer(new Dense(256, 10, [](const Tensor<Expression>& t) { return sigmoid(t); }));
+    std::cout << "Model Created\n";
+
+    std::cout << "Starting training...\n";
+    for(std::size_t i = 0;i < X.size();i++) {
+        auto thing = nn(X.at(i));
+        std::cout << "iteration\n";
+        //nn.fit(X.at(i), Y.at(i), 1);
+    }
+    std::cout << "Training finished";
+}
+
+std::pair<Tensor<float>, Tensor<float>> circleData(std::size_t data_size) {
+    std::random_device rd;
+    std::mt19937 e2(rd());
+    std::uniform_real_distribution dist(-1.f, 1.f);
+
+    const float R = 0.8;
+    Tensor<float> X({data_size, 2});
+    Tensor<float> Y({data_size, 1});
+
+    for(std::size_t i = 0;i < data_size;i++) {
+        float x = dist(e2);
+        float y = dist(e2);
+        X.at({i, 0}) = x;
+        X.at({i, 1}) = y;
+        Y.at({i, 0}) = (float)((y < x*x - 0.5));
+    }
+
+    return {X, Y};
+}
+
+void circleExample() {
+    using namespace Engine;
+    const std::size_t data_size = 100;
+    
+    const auto& [X, Y] = circleData(data_size);
+
+    Network nn(0.1, [](const Tensor<Expression>& Yhat, const Tensor<float>& Y) { return binarycrossentropy(Yhat, Y); });
+    nn.addLayer(new Dense(2, 16, [](const Tensor<Expression>& t) { return relu(t); }));
+    nn.addLayer(new Dense(16, 1, [](const Tensor<Expression>& t) { return sigmoid(t); }));
+
+    auto Yhat = nn(X);  
+    float accuracy = 0;
+    for(std::size_t i = 0;i < data_size;i++) {
+        accuracy += (std::abs(std::round(Yhat.at({i, 0}).getValue()) - Y.at({i, 0})) < 0.1);
+    }
+    accuracy /= (float)data_size;
+    std::cout << "Accuracy: " << accuracy << std::endl;
+
+    nn.fit(X, Y, 200);
+
+    const auto& [Xn, Yn] = circleData(data_size);
+    auto Yhatn = nn(Xn);  
+    accuracy = 0;
+    for(std::size_t i = 0;i < data_size;i++) {
+        accuracy += (std::abs(std::round(Yhatn.at({i, 0}).getValue()) - Yn.at({i, 0})) < 0.1);
+    }
+    accuracy /= (float)data_size;
+    std::cout << "Accuracy: " << accuracy;
+}
+
 int main() {
-    TensorExample();
+    circleExample();
 }   

@@ -11,7 +11,7 @@ public:
     Network(float learningRate, ErrorFunction loss_function);
     void addLayer(Layer* layer);
     virtual Tensor<Engine::Expression> operator()(const Tensor<float>& X) const override;
-    virtual void fit(const Tensor<float>& X, const Tensor<float>& Y, std::size_t iterations) const override;
+    virtual void fit(const Tensor<float>& X, const Tensor<float>& Y, std::size_t iterations, bool verbose) const override;
 private:
     std::vector<std::unique_ptr<Layer>> layers;
     float learningRate;
@@ -36,11 +36,13 @@ Tensor<Engine::Expression> Network<ErrorFunction>::operator()(const Tensor<float
 }
 
 template <typename ErrorFunction>
-void Network<ErrorFunction>::fit(const Tensor<float>& X, const Tensor<float>& Y, std::size_t iterations) const {
+void Network<ErrorFunction>::fit(const Tensor<float>& X, const Tensor<float>& Y, std::size_t iterations, bool verbose) const {
     for(std::size_t iteration = 1;iteration <= iterations;iteration++) {
         Tensor<Engine::Expression> output = operator()(X);
         Engine::Expression error = loss_function(output, Y);
-        std::cout << "Iteration: " << iteration << " Error: " << error.getValue() << '\n';
+        if(verbose) {
+            std::cout << "Iteration: " << iteration << " Error: " << error.getValue() << '\n';
+        }
         Engine::computeGradients(error);
         for(auto& layer : layers) layer->updateValues(learningRate);
     }

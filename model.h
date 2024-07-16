@@ -7,7 +7,7 @@
 class Model {
 public:
     virtual Tensor<Engine::Expression> operator()(const Tensor<float>& X) const = 0;
-    virtual void fit(const Tensor<float>& X, const Tensor<float>& Y, std::size_t iterations) const = 0;
+    virtual void fit(const Tensor<float>& X, const Tensor<float>& Y, std::size_t iterations, bool verbose) const = 0;
 };
 
 #endif

@@ -11,7 +11,7 @@ namespace Engine {
 
     Engine::Expression createVariable(float val);
     Tensor<Engine::Expression> createZeroTensor(const std::vector<std::size_t>& shape);
-    Tensor<Engine::Expression> createRandomTensor(const std::vector<std::size_t>& shape);
+    Tensor<Engine::Expression> createRandomTensor(const std::vector<std::size_t>& shape, float radius=1);
 
     Engine::Expression add(const Engine::Expression& e1, const Engine::Expression& e2);
     Engine::Expression add(float val, const Engine::Expression& e2);

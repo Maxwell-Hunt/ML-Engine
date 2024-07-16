@@ -22,9 +22,9 @@ Tensor<Engine::Expression> createZeroTensor(const std::vector<std::size_t>& shap
     return t;
 }
 
-Tensor<Engine::Expression> createRandomTensor(const std::vector<std::size_t>& shape) {
+Tensor<Engine::Expression> createRandomTensor(const std::vector<std::size_t>& shape, float radius) {
     std::mt19937 gen(rd());
-    std::uniform_real_distribution<> dis(-1.2f, 1.2f);
+    std::uniform_real_distribution<> dis(-radius, radius);
     Tensor<Engine::Expression> t(shape);
     for(Engine::Expression& ex : t) ex = createVariable(dis(gen));
     return t;

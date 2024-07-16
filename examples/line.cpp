@@ -5,6 +5,8 @@
 #include "../context.h"
 #include "../network.h"
 
+// Generates a grid of 2d data points.  Labels each point based on whether it is above
+// the line y = x
 std::pair<Tensor<float>, Tensor<float>> generate2D(std::size_t size) {
     Tensor<float> X({size, 2});
     Tensor<float> Y({size, 1});
@@ -28,14 +30,14 @@ std::pair<Tensor<float>, Tensor<float>> generate2D(std::size_t size) {
     return {X, Y};
 }
 
+// This example corresponds to linear.py in the tests folder which uses Tensorflow to
+// achieve the exact same results after 100 iterations
 int main() {
     using namespace Engine;
 
     const float alpha = 1;
     const std::size_t DATA_SIZE = 36;
     const auto& [X, Y] = generate2D(DATA_SIZE);
-
-    //for(float f : Y) std::cout << f << std::endl;
 
     Tensor<Expression> w1({2, 20});
     Tensor<Expression> w2({20, 1});
@@ -47,10 +49,9 @@ int main() {
     for(std::size_t iteration = 1;iteration <= NUM_ITERS;iteration++) {
         Tensor<Expression> hidden = sigmoid(matmul(X, w1));
         Tensor<Expression> output = sigmoid(matmul(hidden, w2));
-        // IN PYTHON: errors = Y * tf.math.log(output) + (1 - Y) * tf.math.log(1 - output)
 
+        // binary crossentropy
         Tensor<Expression> errors = Y * log(output) + (1.f - Y) * log(1.f - output);
-        //for(Expression& ex : errors) std::cout << ex.getValue() << std::endl;
         Expression error = (-1.f / DATA_SIZE) * reduceAdd(errors);
 
         float accuracy = 0;

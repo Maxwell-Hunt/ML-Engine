@@ -34,7 +34,9 @@ std::pair<Tensor<float>, Tensor<float>> generate2DRandom(std::size_t size) {
     return {X, Y};
 }
 
-// Corresponds to linear.py in test files
+// Corresponds to linear.py in test files which uses Tensorflow to achieve the exact same results
+// Linear regression example using autograd functionality combined with a
+// simple training loop
 int main() {
     using namespace Engine;
     const std::size_t DATA_SIZE = 100;

@@ -9,6 +9,9 @@ Engine::Expression mse(const Tensor<Engine::Expression>& Yhat, const Tensor<floa
     return Engine::reduceAdd(square(Yhat - Y)) / Y.shape().at({Y.shape().size()-1});
 }
 
+// Standard MNIST Handwritten Digit Example
+// Data available here in csv format
+// https://www.kaggle.com/datasets/oddrationale/mnist-in-csv
 int main() {
     using namespace Engine;
     std::cout << "Loading Data...\n";
@@ -49,8 +52,4 @@ int main() {
         nn.fit(X.at(i), Y.at(i), 1, verbose);
     }
     std::cout << "Training finished";
-}
-
-void mnistExample() {
-    
 }

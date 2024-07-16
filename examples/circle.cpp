@@ -3,7 +3,8 @@
 #include "../context.h"
 #include "../network.h"
 
-// Generates data in the range (-1, 1) and labels it based on whether it is inside of the 
+// Generates data in the range (-1, 1) and labels it based on whether it is inside of the
+// circle with radius R
 std::pair<Tensor<float>, Tensor<float>> circleData(std::size_t data_size) {
     std::random_device rd;
     std::mt19937 e2(rd());
@@ -38,6 +39,7 @@ int main() {
     using namespace Engine;
     const std::size_t data_size = 100;
     
+    // Generate training data
     const auto& [X, Y] = circleData(data_size);
 
     Network nn(0.1, [](const Tensor<Expression>& Yhat, const Tensor<float>& Y) { return binarycrossentropy(Yhat, Y); });
@@ -52,8 +54,10 @@ int main() {
     accuracy /= (float)data_size;
     std::cout << "Accuracy: " << accuracy << std::endl;
 
+    // Train network 
     nn.fit(X, Y, 200, true);
 
+    // Generate testing data
     const auto& [Xn, Yn] = circleData(data_size);
     auto Yhatn = nn(Xn);  
     accuracy = 0;

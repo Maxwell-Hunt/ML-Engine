@@ -2,6 +2,7 @@
 #define __DENSE__
 
 #include "model.h"
+#include <cmath>
 
 class Layer {
 public:
@@ -25,7 +26,8 @@ private:
 
 template <typename Callable>
 Dense<Callable>::Dense(std::size_t input_size, std::size_t output_size, Callable activation) : 
-    w{Engine::createRandomTensor({input_size, output_size})}, 
+    // Glorot Uniform Initialization
+    w{Engine::createRandomTensor({input_size, output_size}, std::sqrt(6 / (input_size + output_size)))}, 
     b{Engine::createZeroTensor({output_size})}, 
     activation{activation} {}
 

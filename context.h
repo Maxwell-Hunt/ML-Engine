@@ -38,6 +38,11 @@ namespace Engine {
     Engine::Expression relu(const Engine::Expression& ex);
     Tensor<Engine::Expression> relu(const Tensor<Engine::Expression>& t);
 
+    Tensor<Engine::Expression> softmax(const Tensor<Engine::Expression>& t);
+
+    Engine::Expression exp(const Engine::Expression& ex);
+    Tensor<Engine::Expression> exp(const Tensor<Engine::Expression>& t);
+
     Engine::Expression log(const Engine::Expression& ex);
     Tensor<Engine::Expression> log(const Tensor<Engine::Expression>& t);
 

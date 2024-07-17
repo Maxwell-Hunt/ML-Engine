@@ -144,6 +144,29 @@ Tensor<Engine::Expression> relu(const Tensor<Engine::Expression>& t) {
     return result;
 }
 
+Tensor<Engine::Expression> softmax(const Tensor<Engine::Expression>& t) {
+    Tensor<Engine::Expression> result = exp(t);
+    return result / reduceAdd(result);
+}
+
+Engine::Expression exp(const Engine::Expression& ex) {
+    Internal::Exp* e = new Internal::Exp(ex.getData());
+    return Engine::Expression(e);
+}
+
+Tensor<Engine::Expression> exp(const Tensor<Engine::Expression>& t) {
+    Tensor<Engine::Expression> result(t.shape());
+    auto it1 = result.begin();
+    auto it2 = t.begin();
+    while(it1 != result.end()) {
+        *it1 = exp(*it2);
+        ++it1;
+        ++it2;
+    }
+
+    return result;
+}
+
 Engine::Expression log(const Engine::Expression& ex) {
     Internal::Log* l = new Internal::Log(ex.getData());
     return Engine::Expression(l);

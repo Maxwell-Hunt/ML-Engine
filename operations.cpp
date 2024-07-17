@@ -84,6 +84,14 @@ void Relu::updatePartials() {
     addToPartial(*subexpr, ((subexpr->getValue() > 0) ? 1.f : 0.f) * getPartial());
 }
 
+Exp::Exp(const std::shared_ptr<Internal::Expression>& subexpr) :
+    UnaryOperation{subexpr, std::exp(subexpr->getValue())} {}
+
+void Exp::updatePartials() {
+    // the derivative of e^x is e^x
+    addToPartial(*subexpr, getValue() * getPartial());
+}
+
 Log::Log(const std::shared_ptr<Internal::Expression>& subexpr) :
     UnaryOperation{subexpr, std::log(subexpr->getValue())} {}
 

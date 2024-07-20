@@ -1,216 +1,117 @@
 #ifndef __TENSOR__
 #define __TENSOR__
 
-#include <vector>
-#include <numeric>
+#include <array>
+#include <initializer_list>
 #include <stdexcept>
 #include <algorithm>
-#include <type_traits>
 
-template <typename T>
-class Tensor {
-
-    template <typename U, typename H>
-    friend auto operator+(const Tensor<U>& a, const Tensor<H>& b) -> Tensor<decltype(std::declval<U>() + std::declval<H>())>;
-
-    template <typename U, typename H>
-    friend auto operator-(const U& scalar, const Tensor<H>& a) -> Tensor<decltype(std::declval<U>() - std::declval<H>())>;
-
-    template <typename U, typename H>
-    friend auto operator-(const Tensor<U>& a, const Tensor<H>& b) -> Tensor<decltype(std::declval<U>() - std::declval<H>())>;
-
-    template <typename U, typename H>
-    friend auto operator*(const Tensor<U>& a, const Tensor<H>& b) -> Tensor<decltype(std::declval<U>() * std::declval<H>())>;
-
-    template <typename U, typename H>
-    friend auto operator*(const Tensor<U>& a, const H& scalar) -> Tensor<decltype(std::declval<U>() * std::declval<H>())>;
-
-    template <typename U, typename H>
-    friend auto operator*(const U& scalar, const Tensor<H>& a) -> Tensor<decltype(std::declval<U>() * std::declval<H>())>;
-
-    template <typename U, typename H>
-    friend auto operator/(const Tensor<U>& a, const H& scalar) -> Tensor<decltype(std::declval<U>() / std::declval<H>())>;
-
-public:
-    Tensor(const std::vector<std::size_t>& shape);
-    T& at(const std::vector<std::size_t>& indices);
-    const T& at(const std::vector<std::size_t>& indices) const;
-    typename std::vector<T>::iterator begin();
-    typename std::vector<T>::iterator end();
-    typename std::vector<T>::const_iterator begin() const;
-    typename std::vector<T>::const_iterator end() const;
-
-    const std::vector<std::size_t>& shape() const;
-    std::size_t size() const;
-
-    const std::vector<T>& data() const;
-
-    void reshape(std::vector<std::size_t>&& new_shape);
-private:
-
-    std::size_t getIndex(const std::vector<std::size_t>& indices) const;
-
-    std::vector<std::size_t> _shape;
-    std::size_t _size;
-    std::vector<T> _data;
+template <std::size_t First, std::size_t ...Rest>
+struct IndexStructure : std::true_type { 
+    using rest = IndexStructure<Rest...>;
 };
 
-template <typename T>
-Tensor<T>::Tensor(const std::vector<std::size_t>& shape) : 
-    _shape{shape},
-    _size{std::accumulate(_shape.begin(), _shape.end(), 1u, std::multiplies<std::size_t>())},
-    _data{std::vector<T>(_size)}
-    {}
-
-template <typename T>
-std::size_t Tensor<T>::getIndex(const std::vector<std::size_t>& indices) const {
-    if(indices.size() != _shape.size()) {
-        throw std::runtime_error("Incorrect number of indices");
-    }
-
-    std::size_t arr_size = _size;
-    std::size_t index = 0;
-    for(std::size_t i = 0;i < _shape.size();i++) {
-        arr_size /= _shape.at(i);
-        index += arr_size * indices.at(i);
-    }
-
-    return index;
-}
-
-template <typename T>
-const T& Tensor<T>::at(const std::vector<std::size_t>& indices) const {
-    return _data.at(getIndex(indices));
-}
+template <std::size_t Single>
+struct IndexStructure<Single> : std::true_type {
+    using rest = std::false_type;
+};
 
 
-template <typename T>
-T& Tensor<T>::at(const std::vector<std::size_t>& indices) {
-    return _data.at(getIndex(indices));
-}
+template <typename IndicesA, typename IndicesB>
+struct isSuffix : isSuffix<IndicesA, typename IndicesB::rest> {};
 
-template <typename T>
-const std::vector<std::size_t>& Tensor<T>::shape() const {
-    return _shape;
-}
+// The empty list is allways a suffix of anything
+template <typename IndicesB>
+struct isSuffix<std::false_type, IndicesB> : std::true_type {};
 
-template <typename T>
-void Tensor<T>::reshape(std::vector<std::size_t>&& new_shape) {
-    if(std::accumulate(new_shape.begin(), new_shape.end(), 1u, std::multiplies<std::size_t>()) != _size) {
-        throw std::runtime_error("Invalid Reshape");
-    }
-    _shape = std::move(new_shape);
-}
+// Nothing except the empty list is a suffix of the empty list
+template <typename IndicesA>
+struct isSuffix<IndicesA, std::false_type> : std::false_type {};
 
-template <typename T>
-std::size_t Tensor<T>::size() const {
-    return _size;
-}
+template <>
+struct isSuffix<std::false_type, std::false_type> : std::true_type {};
 
-template <typename T>
-const std::vector<T>& Tensor<T>::data() const {
-    return _data;
-}
+// If both sets of indices are the same then we return true_type
+template <std::size_t ...Indices>
+struct isSuffix<IndexStructure<Indices...>, IndexStructure<Indices...>> : std::true_type {};
 
-template <typename T>
-typename std::vector<T>::iterator Tensor<T>::begin() { return _data.begin(); }
-
-template <typename T>
-typename std::vector<T>::iterator Tensor<T>::end() { return _data.end(); }
-
-template <typename T>
-typename std::vector<T>::const_iterator Tensor<T>::begin() const { return _data.cbegin(); }
-
-template <typename T>
-typename std::vector<T>::const_iterator Tensor<T>::end() const { return _data.cend(); }
-
-template <typename U, typename H>
-auto operator+(const Tensor<U>& a, const Tensor<H>& b) -> Tensor<decltype(std::declval<U>() + std::declval<H>())> {
-    if(!std::ranges::equal(a.shape(), b.shape()) &&
-        !std::equal(++a.shape().begin(), a.shape().end(), b.shape().begin(), b.shape().end())) {
-        throw std::runtime_error("Addition cannot proceed as tensor shapes do not match");
-    }
-
-    using ResultType = decltype(std::declval<U>() + std::declval<H>());
-    Tensor<ResultType> result(a.shape());
-    if(std::ranges::equal(a.shape(), b.shape())) {
-        for(std::size_t i = 0;i < a.size();i++) {
-            result._data.at(i) = a._data.at(i) + b._data.at(i);
-        }
-    } else {
-        for(std::size_t i = 0;i < a.size();i++) {
-            result._data.at(i) = a._data.at(i) + b._data.at(i % b._data.size());
-        }
-    }
+template <typename T, std::size_t ...Dims>
+class Tensor {
+public:
+    constexpr Tensor() = default;
+    constexpr Tensor(std::initializer_list<T> list) { std::copy(list.begin(), list.end(), _data.begin()); }
     
-    return result;
-}
+    static constexpr std::size_t size() { return _size; }
+    static constexpr std::array<std::size_t, sizeof...(Dims)> dims() { return _dims; }
 
-template <typename U, typename H>
-auto operator-(const U& scalar, const Tensor<H>& a) -> Tensor<decltype(std::declval<U>() - std::declval<H>())> {
-    using ResultType = decltype(std::declval<U>() - std::declval<H>());
-    Tensor<ResultType> result(a.shape());
-    for(std::size_t i = 0;i < a.size();i++) {
-        result._data.at(i) = scalar - a._data.at(i);
+    T& at(std::initializer_list<std::size_t> indices) { return _data.at(getIndex(indices)); }
+    const T& at(std::initializer_list<std::size_t> indices) const { return _data.at(getIndex(indices)); }
+
+    std::array<T, size()>::iterator begin() { return _data.begin(); }
+    std::array<T, size()>::iterator end() { return _data.end(); }
+
+    const std::array<T, size()>::const_iterator end() const { return _data.end(); }
+    const std::array<T, size()>::const_iterator begin() const { return _data.begin(); }
+
+    template <typename H, std::size_t ...OtherDims>
+    auto operator+(const Tensor<H, OtherDims...>& other) const -> Tensor<decltype(std::declval<T>() + std::declval<H>()), Dims...> {
+        return applyBinaryOperation<std::plus>(other);
     }
 
-    return result;
-}
-
-template <typename U, typename H>
-auto operator-(const Tensor<U>& a, const Tensor<H>& b) -> Tensor<decltype(std::declval<U>() - std::declval<H>())> {
-    if(a.shape() != b.shape()) {
-        throw std::runtime_error("Subtraction cannot proceed as tensor shapes do not match");
+    template <typename H, std::size_t ...OtherDims>
+    auto operator-(const Tensor<H, OtherDims...>& other) const -> Tensor<decltype(std::declval<T>() - std::declval<H>()), Dims...> {
+        return applyBinaryOperation<std::minus>(other);
     }
 
-    using ResultType = decltype(std::declval<U>() - std::declval<H>());
-    Tensor<ResultType> result(a.shape());
-    for(std::size_t i = 0;i < a.size();i++) {
-        result._data.at(i) = a._data.at(i) - b._data.at(i);
+    template <typename H, std::size_t ...OtherDims>
+    auto operator*(const Tensor<H, OtherDims...>& other) const -> Tensor<decltype(std::declval<T>() * std::declval<H>()), Dims...> {
+        return applyBinaryOperation<std::multiplies>(other);
     }
 
-    return result;
-}
-
-template <typename U, typename H>
-auto operator*(const Tensor<U>& a, const Tensor<H>& b) -> Tensor<decltype(std::declval<U>() * std::declval<H>())> {
-    if(a.shape() != b.shape()) {
-        throw std::runtime_error("Elementwise multiplication cannot proceed as tensor shapes do not match");
+    template <typename H, std::size_t ...OtherDims>
+    auto operator/(const Tensor<H, OtherDims...>& other) const -> Tensor<decltype(std::declval<T>() / std::declval<H>()), Dims...> {
+        return applyBinaryOperation<std::divides>(other);
     }
 
-    using ResultType = decltype(std::declval<U>() * std::declval<H>());
-    Tensor<ResultType> result(a.shape());
-    for(std::size_t i = 0;i < a.size();i++) {
-        result._data.at(i) = a._data.at(i) * b._data.at(i);
-    }
-    
-    return result;
-}
-
-template <typename U, typename H>
-auto operator*(const Tensor<U>& a, const H& scalar) -> Tensor<decltype(std::declval<U>() * std::declval<H>())> {
-    using ResultType = decltype(std::declval<U>() * std::declval<H>());
-    Tensor<ResultType> result(a.shape());
-    for(std::size_t i = 0;i < a.size();i++) {
-        result._data.at(i) = a._data.at(i) * scalar;
+private:
+    std::size_t getIndex(std::initializer_list<std::size_t> indices) {
+        std::size_t result = 0;
+        std::size_t spread = _size;
+        auto it = indices.begin();
+        for(std::size_t i = 0;it != indices.end() && i < _size;++i, ++it) {
+            if(*it >= _dims[i]) { throw std::length_error("Tensor index out of bounds");}
+            spread /= _dims[i];
+            result += spread * *it;
+        }
+        return result;
     }
 
-    return result;
-}
+    // Returns the result of performing the binary operation on this tensor as well as another.
+    // If the second Tensor does not have the exact same shape, it will broadcast it accross.
+    // For this to work it is required that the dimensions list of the second tensor is a suffix
+    // of the first.
+    template <template <typename> class BinaryOperation, typename H, std::size_t ...OtherDims>
+    auto applyBinaryOperation(const Tensor<H, OtherDims...>& other) const ->
+        Tensor<decltype(BinaryOperation<T>()(std::declval<T>(), std::declval<H>())), Dims...>
+    {
+        static_assert(isSuffix<IndexStructure<OtherDims...>, IndexStructure<Dims...>>::value, "Dimensions mismatch");
 
-template <typename U, typename H>
-auto  operator*(const U& scalar, const Tensor<H>& a) -> Tensor<decltype(std::declval<U>() * std::declval<H>())> {
-    return a * scalar;
-}
-
-template <typename U, typename H>
-auto operator/(const Tensor<U>& a, const H& scalar) -> Tensor<decltype(std::declval<U>() / std::declval<H>())> {
-    using ResultType = decltype(std::declval<U>() / std::declval<H>());
-    Tensor<ResultType> result(a.shape());
-    for(std::size_t i = 0;i < a.size();i++) {
-        result._data.at(i) = a._data.at(i) / scalar;
+        using ResultType = decltype(BinaryOperation<T>()(std::declval<T>(), std::declval<H>()));
+        Tensor<ResultType, Dims...> result;
+        // Apply Broadcasting as is done by numpy. Broadcasting is explained in more detail here
+        // https://numpy.org/doc/stable/user/basics.broadcasting.html
+        const std::size_t spread = (OtherDims * ...);
+        const std::size_t iters = _size / spread;
+        for(std::size_t i = 0; i < iters; i++) {
+            const std::size_t offset = i * spread;
+            std::transform(begin() + offset, begin() + offset + spread, other.begin(), result.begin() + offset, BinaryOperation<ResultType>());
+        }
+        return result;
     }
 
-    return result;
-}
+    static constexpr std::size_t _size = (Dims * ...);
+    static constexpr std::array<std::size_t, sizeof...(Dims)> _dims = {Dims...};
+    std::array<T, _size> _data;
+};
+
 #endif

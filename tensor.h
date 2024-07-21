@@ -39,7 +39,7 @@ template <typename T, std::size_t ...Dims>
 class Tensor {
 public:
     constexpr Tensor() = default;
-    constexpr Tensor(std::initializer_list<T> list) { std::copy(list.begin(), list.end(), _data.begin()); }
+    constexpr Tensor(std::initializer_list<T> list) {  std::copy(list.begin(), list.end(), _data.begin()); }
     
     static constexpr std::size_t size() { return _size; }
     static constexpr std::array<std::size_t, sizeof...(Dims)> dims() { return _dims; }
@@ -74,7 +74,7 @@ public:
     }
 
 private:
-    std::size_t getIndex(std::initializer_list<std::size_t> indices) {
+    std::size_t getIndex(std::initializer_list<std::size_t> indices) const {
         std::size_t result = 0;
         std::size_t spread = _size;
         auto it = indices.begin();
@@ -113,5 +113,12 @@ private:
     static constexpr std::array<std::size_t, sizeof...(Dims)> _dims = {Dims...};
     std::array<T, _size> _data;
 };
+
+template <std::size_t rows, std::size_t cols>
+using Matrix = Tensor<float, rows, cols>;
+
+template <std::size_t size>
+using Vector = Tensor<float, size>;
+
 
 #endif

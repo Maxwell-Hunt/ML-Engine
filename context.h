@@ -22,6 +22,11 @@ Variable<float, Dims...> createRandomVariable() {
 }
 
 template <Floating T, std::size_t ...Dims>
+void computeGradients(const Variable<T, Dims...>& ex) {
+    ex.get()->backPropagate();
+}
+
+template <Floating T, std::size_t ...Dims>
 Variable<T, Dims...> square(const Variable<T, Dims...>& v) {
     return Variable(new Square(v.get()));
 }

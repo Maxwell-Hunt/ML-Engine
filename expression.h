@@ -10,6 +10,9 @@
 template <typename T>
 concept Floating = std::is_floating_point<T>::value;
 
+template <Floating T, std::size_t ...Dims>
+class Variable;
+
 
 // The reasoning behind having this ExpressionBase is that we don't necessarily
 // know the shape of the tensors of the children of any given Expression and
@@ -18,17 +21,22 @@ class ExpressionBase {
 protected:
     using Children = std::pair<ExpressionBase*, ExpressionBase*>;
     virtual Children children() const = 0;
+    void updateOther(ExpressionBase* ex) const { ex->updatePartials(); }
+private:
     virtual void updatePartials() = 0;
 };
 
 template <Floating T, std::size_t ...Dims>
-class Expression : public ExpressionBase { 
+class Expression : public ExpressionBase {
+friend void computeGradients<>(const Variable<T, Dims...>& ex);
 public:
     virtual ~Expression() = default;
     const Tensor<T, Dims...>& value() const { return _data; }
     const Tensor<T, Dims...>& partials() const { return _gradients; }
 protected:
-    Expression(Tensor<T, Dims...>&& value) : _data{std::move(value)} {}
+    Expression(Tensor<T, Dims...>&& value) : _data{std::move(value)} {
+        std::fill(_gradients.begin(), _gradients.end(), 0);
+    }
 
     void addToPartial(const std::shared_ptr<Expression>& ex, const Tensor<T, Dims...>& value) {
         ex->_gradients = ex->_gradients + value;
@@ -40,14 +48,14 @@ private:
         std::stack<ExpressionBase*> s;
         std::unordered_set<ExpressionBase*> visited;
 
-        buildtopo(this, s, visited);
+        buildTopo(this, s, visited);
 
         while(!s.empty()) {
             // Think of ways to avoid using the static cast here.  Also note that this
             // might be the source of potential issues in the future so keep an eye out
             // for this
             ExpressionBase* ex = s.top(); s.pop();
-            ex->updatePartials();
+            updateOther(ex);
         }
     }
 

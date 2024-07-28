@@ -36,10 +36,23 @@ template <std::size_t ...Indices>
 struct isSuffix<IndexStructure<Indices...>, IndexStructure<Indices...>> : std::true_type {};
 
 template <typename T, std::size_t ...Dims>
+class Tensor;
+
+template <typename T>
+struct isTensor : std::false_type {};
+
+template <typename T, std::size_t ...Dims>
+struct isTensor<Tensor<T, Dims...>> : std::true_type {};
+
+// Should we require that the value type of a Tensor is a NonTensor? That might make sense.
+template <typename T>
+concept NonTensor = !isTensor<T>::value;
+
+template <typename T, std::size_t ...Dims>
 class Tensor {
 public:
     constexpr Tensor() = default;
-    constexpr Tensor(std::initializer_list<T> list) {  std::copy(list.begin(), list.end(), _data.begin()); }
+    constexpr Tensor(std::initializer_list<T> list) { std::copy(list.begin(), list.end(), _data.begin()); }
     
     static constexpr std::size_t size() { return _size; }
     static constexpr std::array<std::size_t, sizeof...(Dims)> dims() { return _dims; }
@@ -71,6 +84,22 @@ public:
     template <typename H, std::size_t ...OtherDims>
     auto operator/(const Tensor<H, OtherDims...>& other) const -> Tensor<decltype(std::declval<T>() / std::declval<H>()), Dims...> {
         return applyBinaryOperation<std::divides>(other);
+    }
+
+    template<NonTensor H>
+    auto operator*(const H& scalar) const -> Tensor<decltype(std::declval<T>() * std::declval<H>()), Dims...> {
+        using ResultType = decltype(std::declval<T>() * std::declval<H>());
+        Tensor<ResultType, Dims...> result;
+        std::transform(begin(), end(), result.begin(), [&scalar](const T& val) { return val * scalar; });
+        return result;
+    }
+
+    template <NonTensor H>
+    auto operator/(const H& scalar) const -> Tensor<decltype(std::declval<T>() * std::declval<H>()), Dims...> {
+        using ResultType = decltype(std::declval<T>() * std::declval<H>());
+        Tensor<ResultType, Dims...> result;
+        std::transform(begin(), end(), result.begin(), [&scalar](const T& val) { return val / scalar; });
+        return result;
     }
 
 private:
@@ -113,6 +142,11 @@ private:
     static constexpr std::array<std::size_t, sizeof...(Dims)> _dims = {Dims...};
     std::array<T, _size> _data;
 };
+
+template <NonTensor H, typename T, std::size_t ...Dims>
+auto operator*(const H& scalar, const Tensor<T, Dims...>& t) -> Tensor<decltype(std::declval<H>() * std::declval<T>()), Dims...> {
+    return t * scalar;
+}
 
 template <std::size_t rows, std::size_t cols>
 using Matrix = Tensor<float, rows, cols>;

@@ -102,6 +102,18 @@ public:
         return result;
     }
 
+    template <std::size_t ...OtherDims>
+    Tensor<T, OtherDims...> narrowCast() {
+        static_assert(isSuffix<IndexStructure<OtherDims...>, IndexStructure<Dims...>>::value);
+        Tensor<T, OtherDims...> result;
+        std::copy(begin(), begin() + result.size(), result.begin());
+        for(std::size_t i = result.size();i < size();i += result.size()) {
+            std::transform(begin() + i, begin() + i+ result.size(), result.begin(), result.begin(), std::plus<>());
+        }
+
+        return result;
+    }
+
 private:
     std::size_t getIndex(std::initializer_list<std::size_t> indices) const {
         std::size_t result = 0;

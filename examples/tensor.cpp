@@ -8,6 +8,8 @@ int main() {
 
     auto y = square(v);
 
-    std::cout << v.value().at({0, 0}) << ' ' << v.value().at({1, 1}) << std::endl;
+    computeGradients(y);
+
+    std::cout << v.partials().at({0, 0}) << ' ' << v.partials().at({1, 1}) << std::endl;
     std::cout << y.value().at({0, 0}) << ' ' << y.value().at({1, 1});
 }

@@ -2,7 +2,6 @@
 #define __OPERATIONS__
 
 #include "expression.h"
-#include "defs.h"
 
 template <Floating T, std::size_t ...Dims>
 class ConstExpression : public Expression<T, Dims...> {

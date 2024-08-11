@@ -133,11 +133,11 @@ private:
     // of the first.
     template <template <typename> class BinaryOperation, typename H, std::size_t ...OtherDims>
     auto applyBinaryOperation(const Tensor<H, OtherDims...>& other) const ->
-        Tensor<decltype(BinaryOperation<T>()(std::declval<T>(), std::declval<H>())), Dims...>
+        Tensor<decltype(BinaryOperation<void>()(std::declval<T>(), std::declval<H>())), Dims...>
     {
         static_assert(isSuffix<IndexStructure<OtherDims...>, IndexStructure<Dims...>>::value, "Dimensions mismatch");
 
-        using ResultType = decltype(BinaryOperation<T>()(std::declval<T>(), std::declval<H>()));
+        using ResultType = decltype(BinaryOperation<void>()(std::declval<T>(), std::declval<H>()));
         Tensor<ResultType, Dims...> result;
         // Apply Broadcasting as is done by numpy. Broadcasting is explained in more detail here
         // https://numpy.org/doc/stable/user/basics.broadcasting.html
@@ -145,7 +145,7 @@ private:
         const std::size_t iters = _size / spread;
         for(std::size_t i = 0; i < iters; i++) {
             const std::size_t offset = i * spread;
-            std::transform(begin() + offset, begin() + offset + spread, other.begin(), result.begin() + offset, BinaryOperation<ResultType>());
+            std::transform(begin() + offset, begin() + offset + spread, other.begin(), result.begin() + offset, BinaryOperation<void>());
         }
         return result;
     }

@@ -103,7 +103,7 @@ public:
     }
 
     template <std::size_t ...OtherDims>
-    Tensor<T, OtherDims...> narrowCast() {
+    Tensor<T, OtherDims...> narrowCast() const {
         static_assert(isSuffix<IndexStructure<OtherDims...>, IndexStructure<Dims...>>::value);
         Tensor<T, OtherDims...> result;
         std::copy(begin(), begin() + result.size(), result.begin());

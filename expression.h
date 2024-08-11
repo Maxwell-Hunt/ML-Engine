@@ -33,13 +33,21 @@ public:
     virtual ~Expression() = default;
     const Tensor<T, Dims...>& value() const { return _data; }
     const Tensor<T, Dims...>& partials() const { return _gradients; }
+
+    // I would like to not expose this function if possible but for now
+    // it shall remain this way
+    void setPartials(Tensor<T, Dims...> updated) {
+        _gradients = std::move(updated);
+    }
 protected:
     Expression(Tensor<T, Dims...>&& value) : _data{std::move(value)} {
         std::fill(_gradients.begin(), _gradients.end(), 0);
     }
 
-    void addToPartial(const std::shared_ptr<Expression>& ex, const Tensor<T, Dims...>& value) {
-        ex->_gradients = ex->_gradients + value;
+    template <std::size_t... OtherDims>
+    void addToPartial(const std::shared_ptr<Expression<T, OtherDims...>>& ex, const Tensor<T, OtherDims...>& value) {
+        // ex->_gradients = ex->_gradients + value
+        ex->setPartials(ex->partials() + value);
     }
 
 private:
@@ -51,9 +59,6 @@ private:
         buildTopo(this, s, visited);
 
         while(!s.empty()) {
-            // Think of ways to avoid using the static cast here.  Also note that this
-            // might be the source of potential issues in the future so keep an eye out
-            // for this
             ExpressionBase* ex = s.top(); s.pop();
             updateOther(ex);
         }

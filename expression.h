@@ -13,22 +13,49 @@ concept Floating = std::is_floating_point<T>::value;
 template <Floating T, std::size_t ...Dims>
 class Variable;
 
-
 // The reasoning behind having this ExpressionBase is that we don't necessarily
 // know the shape of the tensors of the children of any given Expression and
 // so we don't know the templates for its type.
 class ExpressionBase {
+template <Floating T, std::size_t... Dims>
+friend void computeGradients(const Variable<T, Dims...>& ex);
 protected:
     using Children = std::pair<ExpressionBase*, ExpressionBase*>;
     virtual Children children() const = 0;
     void updateOther(ExpressionBase* ex) const { ex->updatePartials(); }
 private:
     virtual void updatePartials() = 0;
+    virtual void initializeBackProp() = 0;
+
+    void backPropagate() {
+        initializeBackProp();
+        // std::fill(_gradients.begin(), _gradients.end(), 1);
+        std::stack<ExpressionBase*> s;
+        std::unordered_set<ExpressionBase*> visited;
+
+        buildTopo(this, s, visited);
+
+        while(!s.empty()) {
+            ExpressionBase* ex = s.top(); s.pop();
+            updateOther(ex);
+        }
+    }
+
+    void buildTopo(ExpressionBase* ex, std::stack<ExpressionBase*>& s, std::unordered_set<ExpressionBase*>& visited) const {
+        if(visited.count(ex)) return;
+        visited.insert(ex);
+        
+        // Vist children (there should not be more than 2 of them) 
+        auto c = children();
+        if(c.first)  buildTopo(c.first, s, visited);
+        if(c.second) buildTopo(c.second, s, visited);
+
+        s.push(ex);
+    }
 };
 
 template <Floating T, std::size_t ...Dims>
 class Expression : public ExpressionBase {
-friend void computeGradients<>(const Variable<T, Dims...>& ex);
 public:
     virtual ~Expression() = default;
     const Tensor<T, Dims...>& value() const { return _data; }
@@ -51,29 +78,8 @@ protected:
     }
 
 private:
-    void backPropagate() {
-        std::fill(_gradients.begin(), _gradients.end(), 1);
-        std::stack<ExpressionBase*> s;
-        std::unordered_set<ExpressionBase*> visited;
-
-        buildTopo(this, s, visited);
-
-        while(!s.empty()) {
-            ExpressionBase* ex = s.top(); s.pop();
-            updateOther(ex);
-        }
-    }
-
-    void buildTopo(ExpressionBase* ex, std::stack<ExpressionBase*>& s, std::unordered_set<ExpressionBase*>& visited) const {
-        if(visited.count(ex)) return;
-        visited.insert(ex);
-        
-        // Vist children (there should not be more than 2 of them) 
-        auto c = children();
-        if(c.first)  buildTopo(c.first, s, visited);
-        if(c.second) buildTopo(c.second, s, visited);
-
-        s.push(ex);
+    virtual void initializeBackProp() final {
+        std::fill(_gradients.begin(), _gradients.end(), 1.f);
     }
 
     Tensor<T, Dims...> _data;

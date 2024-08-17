@@ -14,4 +14,7 @@ Variable<T, DimsA...> operator*(const Variable<T, DimsA...>& a, const Variable<T
 template <Floating T, std::size_t... DimsA, std::size_t... DimsB>
 Variable<T, DimsA...> operator/(const Variable<T, DimsA...>& a, const Variable<T, DimsB...>& b);
 
+template <Floating T, std::size_t ...Dims>
+Variable<T, Dims...> exp(const Variable<T, Dims...>& v);
+
 #endif

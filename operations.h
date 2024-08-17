@@ -4,6 +4,8 @@
 #include "expression.h"
 #include "defs.h"
 
+#include <cmath>
+
 template <Floating T, std::size_t ...Dims>
 class ConstExpression : public Expression<T, Dims...> {
 friend Variable<T, Dims...> createVariable<>();
@@ -58,6 +60,18 @@ private:
 
     virtual void updatePartials() override {
         this->addToPartial(this->subexpr, 2.f * this->subexpr->value() * this->partials());
+    }
+};
+
+template <Floating T, std::size_t ...Dims>
+class Exp : public UnaryExpression<T, Dims...> {
+friend Variable<T, Dims...> exp<>(const Variable<T, Dims...>& v);
+private:
+    Exp(std::shared_ptr<Expression<T, Dims...>> subexpr) :
+        UnaryExpression<T, Dims...>{subexpr, subexpr->value().map([](T x){return std::exp(x);})} {}
+
+    virtual void updatePartials() override {
+        this->addToPartial(this->subexpr, this->value() * this->partials());
     }
 };
 

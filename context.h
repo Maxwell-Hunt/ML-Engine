@@ -31,6 +31,11 @@ Variable<T, Dims...> square(const Variable<T, Dims...>& v) {
     return Variable(new Square(v.get()));
 }
 
+template <Floating T, std::size_t ...Dims>
+Variable<T, Dims...> exp(const Variable<T, Dims...>& v) {
+    return Variable(new Exp(v.get()));
+}
+
 template <Floating T, std::size_t ...DimsA, std::size_t ...DimsB>
 Variable<T, DimsA...> operator+(const Variable<T, DimsA...>& a, const Variable<T, DimsB...>& b) {
     using templateA = Expression<T, DimsA...>;

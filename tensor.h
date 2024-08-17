@@ -5,6 +5,7 @@
 #include <initializer_list>
 #include <stdexcept>
 #include <algorithm>
+#include <functional>
 
 template <std::size_t First, std::size_t ...Rest>
 struct IndexStructure : std::true_type { 
@@ -111,6 +112,13 @@ public:
             std::transform(begin() + i, begin() + i+ result.size(), result.begin(), result.begin(), std::plus<>());
         }
 
+        return result;
+    }
+
+    template <typename Op>
+    Tensor<T, Dims...> map(Op op) const {
+        Tensor<T, Dims...> result;
+        std::transform(begin(), end(), result.begin(), op);
         return result;
     }
 

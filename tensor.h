@@ -56,6 +56,9 @@ public:
     constexpr Tensor(std::initializer_list<T> list) { std::copy(list.begin(), list.end(), _data.begin()); }
     constexpr Tensor(const T& item) { std::fill(begin(), end(), item); }
 
+    constexpr Tensor(const Tensor& other) = default;
+    constexpr Tensor(Tensor&& other) = default;
+
     Tensor& operator=(const Tensor& other) = default;
 
     Tensor& operator=(std::initializer_list<T> list) { 
@@ -130,10 +133,14 @@ public:
         return result;
     }
 
-    template <std::size_t ...OtherDims>
-    Tensor<T, OtherDims...> narrowCast() const {
-        static_assert(isSuffix<IndexStructure<OtherDims...>, IndexStructure<Dims...>>::value);
-        Tensor<T, OtherDims...> result;
+    // TODO: Find a way to add the static assert back in
+    
+    //template <std::size_t ...OtherDims>
+    template <typename OtherTensor>
+    OtherTensor narrowCast() const {
+        // static_assert(isSuffix<IndexStructure<OtherDims...>, IndexStructure<Dims...>>::value);
+        // Tensor<T, OtherDims...> result;
+        OtherTensor result;
         std::copy(begin(), begin() + result.size(), result.begin());
         for(std::size_t i = result.size();i < size();i += result.size()) {
             std::transform(begin() + i, begin() + i+ result.size(), result.begin(), result.begin(), std::plus<>());

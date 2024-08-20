@@ -10,25 +10,26 @@
 template <typename T>
 concept Floating = std::is_floating_point<T>::value;
 
-template <Floating T, std::size_t ...Dims>
+template <typename T>
 class Variable;
 
 // The reasoning behind having this ExpressionBase is that we don't necessarily
 // know the shape of the tensors of the children of any given Expression and
 // so we don't know the templates for its type.
 class ExpressionBase {
-template <Floating T, std::size_t... Dims>
-friend void computeGradients(const Variable<T, Dims...>& ex);
+template <typename T>
+friend void computeGradients(const Variable<T>& ex);
 protected:
     using Children = std::pair<ExpressionBase*, ExpressionBase*>;
     virtual Children children() const = 0;
     void updateOther(ExpressionBase* ex) const { ex->updatePartials(); }
 private:
     virtual void updatePartials() = 0;
-    virtual void initializeBackProp() = 0;
+    virtual void initializeGradients() = 0;
 
     void backPropagate() {
-        initializeBackProp();
+        // Requires that operator=(float) is defined
+        initializeGradients();
         // std::fill(_gradients.begin(), _gradients.end(), 1);
         std::stack<ExpressionBase*> s;
         std::unordered_set<ExpressionBase*> visited;
@@ -54,47 +55,45 @@ private:
     }
 };
 
-template <Floating T, std::size_t ...Dims>
+template <typename T>
 class Expression : public ExpressionBase {
 public:
     virtual ~Expression() = default;
-    const Tensor<T, Dims...>& value() const { return _data; }
-    const Tensor<T, Dims...>& partials() const { return _gradients; }
+    const T& value() const { return _data; }
+    const T& partials() const { return _gradients; }
 
     // I would like to not expose this function if possible but for now
     // it shall remain this way
-    void setPartials(Tensor<T, Dims...> updated) {
+    void setPartials(T updated) {
         _gradients = std::move(updated);
     }
 protected:
-    Expression(Tensor<T, Dims...>&& value) : _data{std::move(value)} {
-        std::fill(_gradients.begin(), _gradients.end(), 0);
-    }
+    Expression(T&& value) : _data{std::move(value)}, _gradients{0} {}
 
-    template <std::size_t... OtherDims>
-    void addToPartial(const std::shared_ptr<Expression<T, OtherDims...>>& ex, const Tensor<T, OtherDims...>& value) {
+    template <typename H>
+    void addToPartial(const std::shared_ptr<Expression<H>>& ex, const H& value) {
         // ex->_gradients = ex->_gradients + value
         ex->setPartials(ex->partials() + value);
     }
 
 private:
-    virtual void initializeBackProp() final {
-        std::fill(_gradients.begin(), _gradients.end(), 1.f);
+    virtual void initializeGradients() override final {
+        _gradients = 1;
     }
 
-    Tensor<T, Dims...> _data;
-    Tensor<T, Dims...> _gradients;
+    T _data;
+    T _gradients;
 };
 
-template <Floating T, std::size_t ...Dims>
+template <typename T>
 class Variable {
 public:
-    Variable(Expression<T, Dims...>* data) : _data{std::shared_ptr<Expression<T, Dims...>>(data)} {}
-    const Tensor<T, Dims...>& value() const { return _data->value(); }
-    const Tensor<T, Dims...>& partials() const { return _data->partials(); }
-    std::shared_ptr<Expression<T, Dims...>> get() const { return _data; }
+    Variable(Expression<T>* data) : _data{std::shared_ptr<Expression<T>>(data)} {}
+    const T& value() const { return _data->value(); }
+    const T& partials() const { return _data->partials(); }
+    std::shared_ptr<Expression<T>> get() const { return _data; }
 private:
-    std::shared_ptr<Expression<T, Dims...>> _data;
+    std::shared_ptr<Expression<T>> _data;
 };
 
 

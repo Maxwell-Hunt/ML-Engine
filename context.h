@@ -5,14 +5,13 @@
 #include <random>
 
 template <std::size_t ...Dims>
-Variable<float, Dims...> createVariable() {
-    Tensor<float, Dims...> t;
-    std::fill(t.begin(), t.end(), 0);
+Variable<Tensor<float, Dims...>> createTensorVariable() {
+    Tensor<float, Dims...> t = 0;
     return Variable(new ConstExpression(std::move(t)));
 }
 
 template <std::size_t ...Dims>
-Variable<float, Dims...> createRandomVariable() {
+Variable<Tensor<float, Dims...>> createRandomTensorVariable() {
     Tensor<float, Dims...> t;
     static std::random_device rd;
     static std::mt19937 gen;
@@ -21,46 +20,38 @@ Variable<float, Dims...> createRandomVariable() {
     return Variable(new ConstExpression(std::move(t)));
 }
 
-template <Floating T, std::size_t ...Dims>
-void computeGradients(const Variable<T, Dims...>& ex) {
+template <typename T>
+void computeGradients(const Variable<T>& ex) {
     ex.get()->backPropagate();
 }
 
-template <Floating T, std::size_t ...Dims>
-Variable<T, Dims...> square(const Variable<T, Dims...>& v) {
+template <typename T>
+Variable<T> square(const Variable<T>& v) {
     return Variable(new Square(v.get()));
 }
 
-template <Floating T, std::size_t ...Dims>
-Variable<T, Dims...> exp(const Variable<T, Dims...>& v) {
+template <typename T>
+Variable<T> exp(const Variable<T>& v) {
     return Variable(new Exp(v.get()));
 }
 
-template <Floating T, std::size_t ...DimsA, std::size_t ...DimsB>
-Variable<T, DimsA...> operator+(const Variable<T, DimsA...>& a, const Variable<T, DimsB...>& b) {
-    using templateA = Expression<T, DimsA...>;
-    using templateB = Expression<T, DimsB...>;
-    return Variable(new Addition<templateA, templateB>(a.get(), b.get()));
+template <typename T, typename H>
+Variable<T> operator+(const Variable<T>& a, const Variable<H>& b) {
+    return Variable(new Addition<T, H>(a.get(), b.get()));
 }
 
-template <Floating T, std::size_t ...DimsA, std::size_t ...DimsB>
-Variable<T, DimsA...> operator-(const Variable<T, DimsA...>& a, const Variable<T, DimsB...>& b) {
-    using templateA = Expression<T, DimsA...>;
-    using templateB = Expression<T, DimsB...>;
-    return Variable(new Subtraction<templateA, templateB>(a.get(), b.get()));
+template <typename T, typename H>
+Variable<T> operator-(const Variable<T>& a, const Variable<H>& b) {
+    return Variable(new Subtraction<T, H>(a.get(), b.get()));
 }
 
-template <Floating T, std::size_t ...DimsA, std::size_t ...DimsB>
-Variable<T, DimsA...> operator*(const Variable<T, DimsA...>& a, const Variable<T, DimsB...>& b) {
-    using templateA = Expression<T, DimsA...>;
-    using templateB = Expression<T, DimsB...>;
-    return Variable(new Multiplication<templateA, templateB>(a.get(), b.get()));
+template <typename T, typename H>
+Variable<T> operator*(const Variable<T>& a, const Variable<H>& b) {
+    return Variable(new Multiplication<T, H>(a.get(), b.get()));
 }
 
-template <Floating T, std::size_t ...DimsA, std::size_t ...DimsB>
-Variable<T, DimsA...> operator/(const Variable<T, DimsA...>& a, const Variable<T, DimsB...>& b) {
-    using templateA = Expression<T, DimsA...>;
-    using templateB = Expression<T, DimsB...>;
-    return Variable(new Division<templateA, templateB>(a.get(), b.get()));
+template <typename T, typename H>
+Variable<T> operator/(const Variable<T>& a, const Variable<H>& b) {
+    return Variable(new Division<T, H>(a.get(), b.get()));
 }
 #endif

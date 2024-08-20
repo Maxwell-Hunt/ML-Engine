@@ -2,19 +2,19 @@
 #define __DEFS__
 #include "expression.h"
 
-template <Floating T, std::size_t... DimsA, std::size_t... DimsB>
-Variable<T, DimsA...> operator+(const Variable<T, DimsA...>& a, const Variable<T, DimsB...>& b);
+template <typename T, typename H>
+Variable<T> operator+(const Variable<T>& a, const Variable<H>& b);
 
-template <Floating T, std::size_t... DimsA, std::size_t... DimsB>
-Variable<T, DimsA...> operator-(const Variable<T, DimsA...>& a, const Variable<T, DimsB...>& b);
+template <typename T, typename H>
+Variable<T> operator-(const Variable<T>& a, const Variable<H>& b);
 
-template <Floating T, std::size_t... DimsA, std::size_t... DimsB>
-Variable<T, DimsA...> operator*(const Variable<T, DimsA...>& a, const Variable<T, DimsB...>& b);
+template <typename T, typename H>
+Variable<T> operator*(const Variable<T>& a, const Variable<H>& b);
 
-template <Floating T, std::size_t... DimsA, std::size_t... DimsB>
-Variable<T, DimsA...> operator/(const Variable<T, DimsA...>& a, const Variable<T, DimsB...>& b);
+template <typename T, typename H>
+Variable<T> operator/(const Variable<T>& a, const Variable<H>& b);
 
-template <Floating T, std::size_t ...Dims>
-Variable<T, Dims...> exp(const Variable<T, Dims...>& v);
+template <typename T>
+Variable<T> exp(const Variable<T>& v);
 
 #endif

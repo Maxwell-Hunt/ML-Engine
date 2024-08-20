@@ -67,6 +67,18 @@ public:
     const std::array<T, size()>::const_iterator end() const { return _data.end(); }
     const std::array<T, size()>::const_iterator begin() const { return _data.begin(); }
 
+    // Returns the element at index in the underlying array.
+    // Does not do any bounds checking
+    T& operator[](std::size_t index) {
+        return _data[index];
+    }
+
+    // Returns the element at the index in the underlying array.
+    // Does not do any bounds checking
+    const T& operator[](std::size_t index) const {
+        return _data[index];
+    }
+
     template <typename H, std::size_t ...OtherDims>
     auto operator+(const Tensor<H, OtherDims...>& other) const -> Tensor<decltype(std::declval<T>() + std::declval<H>()), Dims...> {
         return applyBinaryOperation<std::plus>(other);
@@ -168,8 +180,39 @@ auto operator*(const H& scalar, const Tensor<T, Dims...>& t) -> Tensor<decltype(
     return t * scalar;
 }
 
-template <std::size_t rows, std::size_t cols>
-using Matrix = Tensor<float, rows, cols>;
+template <typename T, std::size_t rows, std::size_t cols>
+class Matrix : public Tensor<T, rows, cols> {
+public:
+    using Tensor<T, rows, cols>::Tensor;
+
+    template <std::size_t otherCols>
+    Matrix<T, rows, otherCols> matmul(const Matrix<T, cols, otherCols>& other) const {
+        Matrix<T, rows, otherCols> result;
+        for(std::size_t i = 0;i < rows;i++) {
+            for(std::size_t j = 0;j < otherCols;j++) {
+                result[i * otherCols + j] = 0;
+                for(std::size_t k = 0;k < cols;k++) {
+                    result[i * otherCols + j] += (*this)[i * cols + k] * other[k * otherCols + j];
+                }
+            }
+        }
+        return result;
+    }
+
+    template <std::size_t otherCols>
+    Matrix<T, cols, otherCols> transposeMatmul(const Matrix<T, rows, otherCols>& other) const {
+        Matrix<T, cols, otherCols> result;
+        for(std::size_t i = 0;i < cols;i++) {
+            for(std::size_t j = 0;j < otherCols;j++) {
+                result[i * otherCols + j] = 0;
+                for(std::size_t k = 0;k < rows;k++) {
+                    result[i * otherCols + j] += (*this)[k * cols + i] * other[k * otherCols + j];
+                }
+            }
+        }
+        return result;
+    }
+};
 
 template <std::size_t size>
 using Vector = Tensor<float, size>;

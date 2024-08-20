@@ -54,6 +54,21 @@ class Tensor {
 public:
     constexpr Tensor() = default;
     constexpr Tensor(std::initializer_list<T> list) { std::copy(list.begin(), list.end(), _data.begin()); }
+    constexpr Tensor(const T& item) { std::fill(begin(), end(), item); }
+
+    Tensor& operator=(const Tensor& other) = default;
+
+    Tensor& operator=(std::initializer_list<T> list) { 
+        std::copy(list.begin(), list.end(), _data.begin());
+        return *this;
+    }
+
+    Tensor& operator=(const T& item) {
+        std::fill(begin(), end(), item);
+        return *this; 
+    }
+
+    Tensor& operator=(Tensor&& other) = default;
     
     static constexpr std::size_t size() { return _size; }
     static constexpr std::array<std::size_t, sizeof...(Dims)> dims() { return _dims; }

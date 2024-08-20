@@ -24,7 +24,7 @@ protected:
         subexpr{std::move(subexpr)}
         {}
 private:
-    virtual ExpressionBase::Children children() const override { return {subexpr.get(), nullptr}; }
+    virtual ExpressionBase::Children children() const final override { return {subexpr.get(), nullptr}; }
 
 protected:
     std::shared_ptr<Expression<T, Dims...>> subexpr;
@@ -45,7 +45,7 @@ protected:
         childB{std::move(b)}
         {}
 private:
-    virtual ExpressionBase::Children children() const override { return {childA.get(), childB.get()}; }
+    virtual ExpressionBase::Children children() const final override { return {childA.get(), childB.get()}; }
 protected:
     std::shared_ptr<ChildA_t> childA;
     std::shared_ptr<ChildB_t> childB;

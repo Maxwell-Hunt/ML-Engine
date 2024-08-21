@@ -5,6 +5,7 @@
 #include <memory>
 #include <unordered_set>
 #include <stack>
+#include <iostream>
 #include "tensor.h"
 
 template <typename T>
@@ -22,7 +23,6 @@ friend void computeGradients(const Variable<T>& ex);
 protected:
     using Children = std::pair<ExpressionBase*, ExpressionBase*>;
     virtual Children children() const = 0;
-    void updateOther(ExpressionBase* ex) const { ex->updatePartials(); }
 private:
     virtual void updatePartials() = 0;
     virtual void initializeGradients() = 0;
@@ -37,8 +37,9 @@ private:
         buildTopo(this, s, visited);
 
         while(!s.empty()) {
+            // std::cout << "Hello\n";
             ExpressionBase* ex = s.top(); s.pop();
-            updateOther(ex);
+            ex->updatePartials();
         }
     }
 
@@ -47,7 +48,7 @@ private:
         visited.insert(ex);
         
         // Vist children (there should not be more than 2 of them) 
-        auto c = children();
+        Children c = children();
         if(c.first)  buildTopo(c.first, s, visited);
         if(c.second) buildTopo(c.second, s, visited);
 

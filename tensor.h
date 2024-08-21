@@ -143,7 +143,7 @@ public:
         OtherTensor result;
         std::copy(begin(), begin() + result.size(), result.begin());
         for(std::size_t i = result.size();i < size();i += result.size()) {
-            std::transform(begin() + i, begin() + i+ result.size(), result.begin(), result.begin(), std::plus<>());
+            std::transform(begin() + i, begin() + i + result.size(), result.begin(), result.begin(), std::plus<>());
         }
 
         return result;

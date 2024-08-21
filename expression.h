@@ -48,7 +48,7 @@ private:
         visited.insert(ex);
         
         // Vist children (there should not be more than 2 of them) 
-        Children c = children();
+        Children c = ex->children();
         if(c.first)  buildTopo(c.first, s, visited);
         if(c.second) buildTopo(c.second, s, visited);
 
@@ -69,7 +69,9 @@ public:
         _gradients = std::move(updated);
     }
 protected:
-    Expression(T&& value) : _data{std::move(value)}, _gradients{0} {}
+    Expression(T&& value) : _data{std::move(value)} {
+        _gradients = 0.f;
+    }
 
     template <typename H>
     void addToPartial(const std::shared_ptr<Expression<H>>& ex, const H& value) {

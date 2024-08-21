@@ -1,15 +1,22 @@
-#include "../context.h"
 #include <iostream>
-#include <vector>
+#include <fstream>
+#include <sstream>
+#include "../context.h"
 
 int main() {
-    auto v = createRandomVariable<2, 2>();
-    auto w = createVariable<2, 2>();
+    Variable x = createRandomTensorVariable<2, 2>();
+    Variable y = createRandomTensorVariable<2, 2>();
+    Variable z = createRandomTensorVariable<2, 2>();
+    Variable l = createRandomTensorVariable<2, 2>();
+    Variable n = (((x + y) + z) + l);
+    
+    computeGradients(n);
 
-    auto y = square(v);
-
-    computeGradients(y);
-
-    std::cout << v.partials().at({0, 0}) << ' ' << v.partials().at({1, 1}) << std::endl;
-    std::cout << y.value().at({0, 0}) << ' ' << y.value().at({1, 1});
+    for(auto item : x.value()) {
+        std::cout << item << ' ';
+    }
+    std::cout << std::endl;
+    for(auto item : x.partials()) {
+        std::cout << item << ' ';
+    }
 }

@@ -59,4 +59,10 @@ template <typename T, typename H>
 Variable<T> operator/(const Variable<T>& a, const Variable<H>& b) {
     return Variable(new Division<T, H>(a.get(), b.get()));
 }
+
+template <TensorType T, Floating F>
+Variable<T> reduceAdd(const Variable<T>& t) {
+    return Variable(new ReduceAdd<T, F>(t.get()));
+}
+
 #endif

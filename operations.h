@@ -9,8 +9,14 @@
 
 template <typename T>
 class ConstExpression : public Expression<T> {
-friend Variable<T> createTensorVariable<>();
-friend Variable<T> createRandomTensorVariable<>();
+friend Variable<float> createScalarVariable(float value);
+
+template <std::size_t ...Dims>
+friend Variable<Tensor<float, Dims...>> createTensorVariable();
+
+template <std::size_t ...Dims>
+friend Variable<Tensor<float, Dims...>> createRandomTensorVariable();
+
 private:
     ConstExpression(T&& value) : Expression<T>(std::move(value)) {}
     virtual ExpressionBase::Children children() const final override { return {}; }
@@ -44,6 +50,23 @@ private:
 protected:
     std::shared_ptr<Expression<T>> childA;
     std::shared_ptr<Expression<H>> childB;
+};
+
+// TODO: There is a good amount of repeated code between this class
+// and UnaryExpression.  Think about how this can be fixed
+template <TensorType T, Floating F>
+class ReductionExpression : public Expression<F> {
+protected:
+    ReductionExpression(std::shared_ptr<Expression<T>> subexpr, F&& value) : 
+        Expression<F>{std::move(value)},
+        subexpr{std::move(subexpr)}
+        {}
+private:
+    // THIS DOES NOT WORK
+    virtual ExpressionBase::Children children() const final override { return {subexpr.get(), nullptr}; }
+
+protected:
+    std::shared_ptr<Expression<T>> subexpr;
 };
 
 template <typename T>
@@ -178,6 +201,17 @@ private:
         updatePartialsHelper();
     }
 };
+
+template <TensorType T, Floating F>
+class ReduceAdd : ReductionExpression<T, F> {
+friend Variable<T> reduceAdd(const Variable<T>& t)
+private:
+    ReduceAdd(std::shared_ptr<Expression<T>> subexpr) :
+        ReductionExpression<T, F>(subexpr, std::accumulate(subexpr.begin(), subexpr.end(), 0, std::plus<F>())) {}
+    
+    virtual void updatePartials() override final {
+        this->addToPartial(this->subexpr, this->partials());
+    }
 };
 
 #endif

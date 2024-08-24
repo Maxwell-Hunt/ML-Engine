@@ -39,11 +39,17 @@ struct isSuffix<IndexStructure<Indices...>, IndexStructure<Indices...>> : std::t
 template <typename T, std::size_t ...Dims>
 class Tensor;
 
+template <typename T, std::size_t rows, std::size_t cols>
+class Matrix;
+
 template <typename T>
 struct isTensor : std::false_type {};
 
 template <typename T, std::size_t ...Dims>
 struct isTensor<Tensor<T, Dims...>> : std::true_type {};
+
+template <typename T, std::size_t rows, std::size_t cols>
+struct isTensor<Matrix<T, rows, cols>> : std::true_type {};
 
 // Should we require that the value type of a Tensor is a NonTensor? That might make sense.
 template <typename T>

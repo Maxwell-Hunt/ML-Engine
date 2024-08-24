@@ -259,6 +259,21 @@ public:
         }
         return result;
     }
+
+    template <std::size_t otherCols>
+    Matrix<T, rows, otherCols> matmulTransposedOther(const Matrix<T, cols, otherCols>& other) const {
+        Matrix<T, rows, otherCols> result;
+        for (std::size_t i = 0; i < rows; i++) {
+            for (std::size_t j = 0; j < otherCols; j++) {
+                result[i * otherCols + j] = 0;
+                for (std::size_t k = 0; k < cols; k++) {
+                    result[i * otherCols + j] += (*this)[i * cols + k] * other[j * cols + k];
+                }
+            }
+        }
+        return result;
+    }
+ 
 };
 
 template <std::size_t size>

@@ -49,6 +49,9 @@ struct isTensor<Tensor<T, Dims...>> : std::true_type {};
 template <typename T>
 concept NonTensor = !isTensor<T>::value;
 
+template <typename T>
+concept TensorType = isTensor<T>::value;
+
 template <typename T, std::size_t ...Dims>
 class Tensor {
 public:

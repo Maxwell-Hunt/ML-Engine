@@ -3,6 +3,11 @@
 
 #include "operations.h"
 #include <random>
+#include <stdexcept>
+
+Variable<float> createScalarVariable(float value) {
+    return Variable(new ConstExpression(std::move(value)));
+}
 
 template <std::size_t ...Dims>
 Variable<Tensor<float, Dims...>> createTensorVariable() {

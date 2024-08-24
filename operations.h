@@ -5,6 +5,7 @@
 #include "defs.h"
 
 #include <cmath>
+#include <numeric>
 
 template <typename T>
 class ConstExpression : public Expression<T> {
@@ -61,8 +62,16 @@ template <typename T>
 class Exp : public UnaryExpression<T> {
 friend Variable<T> exp<>(const Variable<T>& v);
 private:
+    T findValue(const std::shared_ptr<Expression<T>>& subexpr) const requires TensorType<T> {
+        return subexpr->value().map([](const auto& x) { return std::exp(x); });
+    }
+
+    T findValue(const std::shared_ptr<Expression<T>>& subexpr) const requires Floating<T> {
+        return std::exp(subexpr->value());
+    }
+
     Exp(std::shared_ptr<Expression<T>> subexpr) :
-        UnaryExpression<T>{subexpr, subexpr->value().map([](const auto& x){return std::exp(x);})} {}
+        UnaryExpression<T>{subexpr, findValue(subexpr)} {}
 
     virtual void updatePartials() override {
         this->addToPartial(this->subexpr, this->value() * this->partials());
@@ -76,9 +85,18 @@ private:
     Addition(std::shared_ptr<Expression<T>> a, std::shared_ptr<Expression<H>> b) :
         BinaryExpression<T, H>{a, b, a->value() + b->value()} {}
 
-    virtual void updatePartials() override {
+    void updatePartialsHelper() requires TensorType<T> {
         this->addToPartial(this->childA, this->partials());
         this->addToPartial(this->childB, this->partials().template narrowCast<H>());
+    }
+
+    void updatePartialsHelper() requires Floating<T> {
+        this->addToPartial(this->childA, this->partials());
+        this->addToPartial(this->childB, this->partials());
+    }
+
+    virtual void updatePartials() override {
+        updatePartialsHelper();
     }
 };
 
@@ -89,9 +107,18 @@ private:
     Subtraction(std::shared_ptr<Expression<T>> a, std::shared_ptr<Expression<H>> b) :
         BinaryExpression<T, H>{a, b, a->value() - b->value()} {}
 
-    virtual void updatePartials() override {
+    void updatePartialsHelper() requires TensorType<T> {
         this->addToPartial(this->childA, this->partials());
         this->addToPartial(this->childB, this->partials().template narrowCast<H>() * -1);
+    }
+
+    void updatePartialsHelper() requires Floating<T> {
+        this->addToPartial(this->childA, this->partials());
+        this->addToPartial(this->childB, this->partials() * -1);
+    }
+
+    virtual void updatePartials() override {
+        updatePartialsHelper();
     }
 };
 
@@ -101,10 +128,19 @@ class Multiplication : BinaryExpression<T, H> {
 private:
     Multiplication(std::shared_ptr<Expression<T>> a, std::shared_ptr<Expression<H>> b) :
         BinaryExpression<T, H>{a, b, a->value() * b->value()} {}
-    
-    virtual void updatePartials() override {
+
+    void updatePartialsHelper() requires TensorType<T> {
         this->addToPartial(this->childA, this->partials() * this->childB->value());
         this->addToPartial(this->childB, (this->partials() * this->childA->value()).template narrowCast<H>());
+    }
+
+    void updatePartialsHelper() requires Floating<T> {
+        this->addToPartial(this->childA, this->partials() * this->childB->value());
+        this->addToPartial(this->childB, this->partials() * this->childA->value());
+    }
+    
+    virtual void updatePartials() override {
+        updatePartialsHelper();
     }
 };
 
@@ -115,7 +151,7 @@ private:
     Division(std::shared_ptr<Expression<T>> a, std::shared_ptr<Expression<H>> b) :
         BinaryExpression<T, H>{a, b, a->value() / b->value()} {}
 
-    virtual void updatePartials() override {
+    void updatePartialsHelper() requires TensorType<T> {
         H reciporicalB;
         std::transform(
             this->childB->value().begin(),
@@ -130,6 +166,18 @@ private:
         T intermediate = this->partials() * -1 * this->childA->value() * reciporicalB * reciporicalB;
         this->addToPartial(this->childB, intermediate.template narrowCast<H>());
     }
+
+    void updatePartialsHelper() requires Floating<T> {
+        this->addToPartial(this->childA, this->partials() * 1 / this->childB->value());
+
+        T negRecipSquared = -1 / (this->childB->value() * this->childB->value());
+        this->addToPartial(this->childB, this->partials() * this->childA->value() * negRecipSquared);
+    }
+
+    virtual void updatePartials() override {
+        updatePartialsHelper();
+    }
+};
 };
 
 #endif

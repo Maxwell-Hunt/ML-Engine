@@ -2,6 +2,12 @@
 #define __DEFS__
 #include "expression.h"
 
+template <std::size_t ...Dims>
+Variable<Tensor<float, Dims...>> createTensorVariable();
+
+template <std::size_t ...Dims>
+Variable<Tensor<float, Dims...>> createRandomTensorVariable();
+
 template <typename T, typename H>
 Variable<T> operator+(const Variable<T>& a, const Variable<H>& b);
 

@@ -120,7 +120,23 @@ public:
         return applyBinaryOperation<std::divides>(other);
     }
 
-    template<NonTensor H>
+    template <NonTensor H>
+    auto operator+(const H& scalar) const -> Tensor<decltype(std::declval<T>() + std::declval<H>()), Dims...> {
+        using ResultType = decltype(std::declval<T>() + std::declval<H>());
+        Tensor<ResultType, Dims...> result;
+        std::transform(begin(), end(), result.begin(), [&scalar](const T& val){ return val + scalar; });
+        return result;
+    }
+
+    template <NonTensor H>
+    auto operator-(const H& scalar) const -> Tensor<decltype(std::declval<T>() - std::declval<H>()), Dims...> {
+        using ResultType = decltype(std::declval<T>() - std::declval<H>());
+        Tensor<ResultType, Dims...> result;
+        std::transform(begin(), end(), result.begin(), [&scalar](const T& val) { return val - scalar; });
+        return result;
+    }
+
+    template <NonTensor H>
     auto operator*(const H& scalar) const -> Tensor<decltype(std::declval<T>() * std::declval<H>()), Dims...> {
         using ResultType = decltype(std::declval<T>() * std::declval<H>());
         Tensor<ResultType, Dims...> result;

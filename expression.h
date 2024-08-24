@@ -73,8 +73,8 @@ protected:
         _gradients = 0.f;
     }
 
-    template <typename H>
-    void addToPartial(const std::shared_ptr<Expression<H>>& ex, const H& value) {
+    template <typename H, typename K>
+    void addToPartial(const std::shared_ptr<Expression<H>>& ex, const K& value) {
         // ex->_gradients = ex->_gradients + value
         ex->setPartials(ex->partials() + value);
     }

@@ -62,7 +62,6 @@ protected:
         subexpr{std::move(subexpr)}
         {}
 private:
-    // THIS DOES NOT WORK
     virtual ExpressionBase::Children children() const final override { return {subexpr.get(), nullptr}; }
 
 protected:
@@ -204,11 +203,20 @@ private:
 
 template <TensorType T, Floating F>
 class ReduceAdd : ReductionExpression<T, F> {
-friend Variable<T> reduceAdd(const Variable<T>& t)
+friend Variable<float> reduceAdd<>(const Variable<T>& t);
 private:
     ReduceAdd(std::shared_ptr<Expression<T>> subexpr) :
-        ReductionExpression<T, F>(subexpr, std::accumulate(subexpr.begin(), subexpr.end(), 0, std::plus<F>())) {}
+        ReductionExpression<T, F>(subexpr, helper(subexpr)) {}
     
+    // TODO: Why does this not work if I use std::accumulate
+    F helper(std::shared_ptr<Expression<T>> s) const {
+        F result = 0;
+        for(const F& item : s->value()) {
+            result = result + item;
+        }
+        return result;
+    }
+
     virtual void updatePartials() override final {
         this->addToPartial(this->subexpr, this->partials());
     }

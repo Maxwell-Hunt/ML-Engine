@@ -23,7 +23,7 @@ Variable<T> operator/(const Variable<T>& a, const Variable<H>& b);
 template <typename T>
 Variable<T> exp(const Variable<T>& v);
 
-template <TensorType T, Floating F>
-Variable<T> reduceAdd(const Variable<T>& t);
+template <TensorType T>
+Variable<float> reduceAdd(const Variable<T>& t);
 
 #endif

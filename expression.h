@@ -28,16 +28,13 @@ private:
     virtual void initializeGradients() = 0;
 
     void backPropagate() {
-        // Requires that operator=(float) is defined
         initializeGradients();
-        // std::fill(_gradients.begin(), _gradients.end(), 1);
         std::stack<ExpressionBase*> s;
         std::unordered_set<ExpressionBase*> visited;
 
         buildTopo(this, s, visited);
 
         while(!s.empty()) {
-            // std::cout << "Hello\n";
             ExpressionBase* ex = s.top(); s.pop();
             ex->updatePartials();
         }

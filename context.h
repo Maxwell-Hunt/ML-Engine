@@ -16,6 +16,12 @@ Variable<Tensor<float, Dims...>> createTensorVariable() {
 }
 
 template <std::size_t ...Dims>
+Variable<Tensor<float, Dims...>> createTensorVariable(std::initializer_list<float> items) {
+    Tensor<float, Dims...> t = items;
+    return Variable(new ConstExpression(std::move(t)));
+}
+
+template <std::size_t ...Dims>
 Variable<Tensor<float, Dims...>> createRandomTensorVariable() {
     Tensor<float, Dims...> t;
     static std::random_device rd;
@@ -23,6 +29,12 @@ Variable<Tensor<float, Dims...>> createRandomTensorVariable() {
     std::uniform_real_distribution dis(-1.0, 1.0);
     std::generate(t.begin(), t.end(), [&]() { return dis(gen); });
     return Variable(new ConstExpression(std::move(t)));
+}
+
+template <std::size_t rows, std::size_t cols>
+Variable<Matrix<float, rows, cols>> createMatrixVariable(std::initializer_list<float> items) {
+    Matrix<float, rows, cols> m = items;
+    return Variable(new ConstExpression(std::move(m)));
 }
 
 template <typename T>
@@ -58,6 +70,11 @@ Variable<T> operator*(const Variable<T>& a, const Variable<H>& b) {
 template <typename T, typename H>
 Variable<T> operator/(const Variable<T>& a, const Variable<H>& b) {
     return Variable(new Division<T, H>(a.get(), b.get()));
+}
+
+template <typename MatrixA, typename MatrixB>
+Variable<typename MatMul<MatrixA, MatrixB>::ResultType> matmul(const Variable<MatrixA>& a, const Variable<MatrixB>& b) {
+    return Variable(new MatMul<MatrixA, MatrixB>(a.get(), b.get()));
 }
 
 template <TensorType T>

@@ -65,8 +65,8 @@ public:
 
     // I would like to not expose this function if possible but for now
     // it shall remain this way
-    void setPartials(T updated) {
-        _gradients = std::move(updated);
+    void setPartials(const T& updated) {
+        _gradients = updated;
     }
 protected:
     Expression(T&& value) : _data{std::move(value)} {

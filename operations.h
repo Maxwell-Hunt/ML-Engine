@@ -6,6 +6,7 @@
 
 #include <cmath>
 #include <numeric>
+#include <initializer_list>
 
 template <typename T>
 class ConstExpression : public Expression<T> {
@@ -16,6 +17,12 @@ friend Variable<Tensor<float, Dims...>> createTensorVariable();
 
 template <std::size_t ...Dims>
 friend Variable<Tensor<float, Dims...>> createRandomTensorVariable();
+
+template <std::size_t ...Dims>
+friend Variable<Tensor<float, Dims...>> createTensorVariable(std::initializer_list<float> items);
+
+template <std::size_t rows, std::size_t cols>
+friend Variable<Matrix<float, rows, cols>> createMatrixVariable(std::initializer_list<float> items);
 
 private:
     ConstExpression(T&& value) : Expression<T>(std::move(value)) {}
@@ -101,7 +108,7 @@ private:
 };
 
 template <typename T, typename H>
-class Addition : BinaryExpression<T, H> {
+class Addition : public BinaryExpression<T, H> {
     friend Variable<T> operator+<>(const Variable<T>& a, const Variable<H>& b);
 private:
     Addition(std::shared_ptr<Expression<T>> a, std::shared_ptr<Expression<H>> b) :
@@ -122,8 +129,31 @@ private:
     }
 };
 
+template <typename MatrixA, typename MatrixB>
+class MatMul : public Expression<decltype(std::declval<MatrixA>().matmul(std::declval<MatrixB>()))>{
+public:
+    using ResultType = decltype(std::declval<MatrixA>().matmul(std::declval<MatrixB>()));   
+    friend Variable<ResultType> matmul<>(const Variable<MatrixA>& a, const Variable<MatrixB>& b); 
+private:
+    MatMul(std::shared_ptr<Expression<MatrixA>> a, std::shared_ptr<Expression<MatrixB>> b) :
+        Expression<ResultType>{a->value().matmul(b->value())},
+        childA{std::move(a)},
+        childB{std::move(b)}
+        {}
+
+    virtual ExpressionBase::Children children() const final override { return {childA.get(), childB.get()}; }
+
+    virtual void updatePartials() override {
+        this->addToPartial(childA, this->partials().matmulTransposedOther(this->childB->value()));
+        this->addToPartial(childB, this->childA->value().transposeMatmul(this->partials()));
+    }
+
+    std::shared_ptr<Expression<MatrixA>> childA;
+    std::shared_ptr<Expression<MatrixB>> childB;
+};
+
 template <typename T, typename H>
-class Subtraction : BinaryExpression<T, H> {
+class Subtraction : public BinaryExpression<T, H> {
     friend Variable<T> operator-<>(const Variable<T>& a, const Variable<H>& b);
 private:
     Subtraction(std::shared_ptr<Expression<T>> a, std::shared_ptr<Expression<H>> b) :
@@ -145,7 +175,7 @@ private:
 };
 
 template <typename T, typename H>
-class Multiplication : BinaryExpression<T, H> {
+class Multiplication : public BinaryExpression<T, H> {
     friend Variable<T> operator*<>(const Variable<T>& a, const Variable<H>& b);
 private:
     Multiplication(std::shared_ptr<Expression<T>> a, std::shared_ptr<Expression<H>> b) :
@@ -167,7 +197,7 @@ private:
 };
 
 template <typename T, typename H>
-class Division : BinaryExpression<T, H> {
+class Division : public BinaryExpression<T, H> {
     friend Variable<T> operator/<>(const Variable<T>& a, const Variable<H>& b);
 private:
     Division(std::shared_ptr<Expression<T>> a, std::shared_ptr<Expression<H>> b) :
@@ -202,7 +232,7 @@ private:
 };
 
 template <TensorType T, Floating F>
-class ReduceAdd : ReductionExpression<T, F> {
+class ReduceAdd : public ReductionExpression<T, F> {
 friend Variable<float> reduceAdd<>(const Variable<T>& t);
 private:
     ReduceAdd(std::shared_ptr<Expression<T>> subexpr) :

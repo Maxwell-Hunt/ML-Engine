@@ -63,9 +63,23 @@ Variable<T> operator-(const Variable<T>& a, const Variable<H>& b) {
 }
 
 template <typename T, typename H>
-Variable<T> operator*(const Variable<T>& a, const Variable<H>& b) {
-    return Variable(new Multiplication<T, H>(a.get(), b.get()));
+Variable<H> operator*(const Variable<T>& a, const Variable<H>& b) requires (Floating<T> && TensorType<H>) {
+    return Variable(new Multiplication<T, H, H>(a.get(), b.get()));
 }
+
+template <typename T, typename H>
+Variable<T> operator*(const Variable<T>& a, const Variable<H>& b) requires (!Floating<T> || !TensorType<H>) {
+    return Variable(new Multiplication<T, H, T>(a.get(), b.get()));
+}
+
+// template <typename T, typename H>
+// Variable<T> operator*(const Variable<T>& a, const Variable<H>& b) {
+//     if constexpr (Floating<T> && TensorType<H>) {
+//         return Variable(new Multiplication<T, H, H>(a.get(), b.get()));
+//     } else {
+//         return Variable(new Multiplication<T, H, T>(a.get(), b.get()));
+//     }
+// }
 
 template <typename T, typename H>
 Variable<T> operator/(const Variable<T>& a, const Variable<H>& b) {

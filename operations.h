@@ -224,26 +224,18 @@ private:
 };
 
 template <typename MatrixA, typename MatrixB>
-class MatMul : public Expression<decltype(std::declval<MatrixA>().matmul(std::declval<MatrixB>()))>{
+class MatMul : public BinaryExpression<MatrixA, MatrixB, decltype(std::declval<MatrixA>().matmul(std::declval<MatrixB>()))> {
 public:
-    using ResultType = decltype(std::declval<MatrixA>().matmul(std::declval<MatrixB>()));   
-    friend Variable<ResultType> matmul<>(const Variable<MatrixA>& a, const Variable<MatrixB>& b); 
+    using ResultType = decltype(std::declval<MatrixA>().matmul(std::declval<MatrixB>()));
+    friend Variable<ResultType> matmul<>(const Variable<MatrixA>& a, const Variable<MatrixB>& b);
 private:
     MatMul(std::shared_ptr<Expression<MatrixA>> a, std::shared_ptr<Expression<MatrixB>> b) :
-        Expression<ResultType>{a->value().matmul(b->value())},
-        childA{std::move(a)},
-        childB{std::move(b)}
-        {}
-
-    virtual ExpressionBase::Children children() const final override { return {childA.get(), childB.get()}; }
-
+        BinaryExpression<MatrixA, MatrixB, ResultType>{a, b, a->value().matmul(b->value())} {}
+    
     virtual void updatePartials() override {
-        this->addToPartial(childA, this->partials().matmulTransposedOther(this->childB->value()));
-        this->addToPartial(childB, this->childA->value().transposeMatmul(this->partials()));
+        this->addToPartial(this->childA, this->partials().matmulTransposedOther(this->childB->value()));
+        this->addToPartial(this->childB, this->childA->value().transposeMatmul(this->partials()));
     }
-
-    std::shared_ptr<Expression<MatrixA>> childA;
-    std::shared_ptr<Expression<MatrixB>> childB;
 };
 
 template <TensorType T, Floating F>

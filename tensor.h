@@ -281,5 +281,4 @@ public:
 template <std::size_t size>
 using Vector = Tensor<float, size>;
 
-
 #endif

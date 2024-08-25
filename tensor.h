@@ -232,6 +232,8 @@ class Matrix : public Tensor<T, rows, cols> {
 public:
     using Tensor<T, rows, cols>::Tensor;
 
+    Matrix(const Tensor<T, rows, cols>& t) : Tensor<T, rows, cols>(t) {}
+
     template <std::size_t otherCols>
     Matrix<T, rows, otherCols> matmul(const Matrix<T, cols, otherCols>& other) const {
         Matrix<T, rows, otherCols> result;
@@ -260,14 +262,14 @@ public:
         return result;
     }
 
-    template <std::size_t otherCols>
-    Matrix<T, rows, otherCols> matmulTransposedOther(const Matrix<T, cols, otherCols>& other) const {
-        Matrix<T, rows, otherCols> result;
+    template <std::size_t otherRows>
+    Matrix<T, rows, otherRows> matmulTransposedOther(const Matrix<T, otherRows, cols>& other) const {
+        Matrix<T, rows, otherRows> result;
         for (std::size_t i = 0; i < rows; i++) {
-            for (std::size_t j = 0; j < otherCols; j++) {
-                result[i * otherCols + j] = 0;
+            for (std::size_t j = 0; j < otherRows; j++) {
+                result[i * otherRows + j] = 0;
                 for (std::size_t k = 0; k < cols; k++) {
-                    result[i * otherCols + j] += (*this)[i * cols + k] * other[j * cols + k];
+                    result[i * otherRows + j] += (*this)[i * cols + k] * other[j * cols + k];
                 }
             }
         }

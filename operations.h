@@ -181,12 +181,18 @@ private:
     Multiplication(std::shared_ptr<Expression<T>> a, std::shared_ptr<Expression<H>> b) :
         BinaryExpression<T, H>{a, b, a->value() * b->value()} {}
 
-    void updatePartialsHelper() requires TensorType<T> {
+    void updatePartialsHelper() requires (TensorType<T> && TensorType<H>) {
         this->addToPartial(this->childA, this->partials() * this->childB->value());
         this->addToPartial(this->childB, (this->partials() * this->childA->value()).template narrowCast<H>());
     }
 
-    void updatePartialsHelper() requires Floating<T> {
+    void updatePartialsHelper() requires (TensorType<T> && Floating<H>) {
+        this->addToPartial(this->childA, this->partials() * this->childB->value());
+        auto A = this->partials() * this->childA->value();
+        this->addToPartial(this->childB, std::accumulate(A.begin(), A.end(), 0));
+    }
+
+    void updatePartialsHelper() requires (Floating<T> && Floating<H>) {
         this->addToPartial(this->childA, this->partials() * this->childB->value());
         this->addToPartial(this->childB, this->partials() * this->childA->value());
     }

@@ -3,20 +3,49 @@
 #include <sstream>
 #include "../context.h"
 
-int main() {
-    Variable x = createRandomTensorVariable<2, 2>();
-    Variable y = createRandomTensorVariable<2, 2>();
-    Variable z = createRandomTensorVariable<2, 2>();
-    Variable l = createRandomTensorVariable<2, 2>();
-    Variable n = (((x + y) + z) + l);
-    
-    computeGradients(n);
+std::pair<Tensor<float, 9>, Tensor<float, 9>> generateData() {
 
-    for(auto item : x.value()) {
-        std::cout << item << ' ';
+    Tensor<float, 9> X;
+    Tensor<float, 9> Y;
+    for(std::size_t i = 0;i < 9;i++) {
+        X.at({i}) = -5.f  + (float)i * 3.f / 9.f;
+        Y.at({i}) = X.at({i}) * 2;
     }
-    std::cout << std::endl;
-    for(auto item : x.partials()) {
-        std::cout << item << ' ';
+
+    return {X, Y};
+}
+
+int main() {
+    const auto& [X, Y] = generateData();
+    
+    Variable w = createVariable(1.f);
+    float alpha = 0.01;
+
+    const unsigned int NUM_ITERATIONS = 25;
+
+    for(unsigned int iteration = 1;iteration <= NUM_ITERATIONS;iteration++) {
+        Variable result = X * w;
+        Variable squaredError = square(result - Y);
+        Variable mse = reduceAdd(squaredError) / 9.f;
+
+        computeGradients(mse);
+        // for(float item : result.partials()) {
+        //     std::cout << item << ' ';
+        // }
+        // std::cout << std::endl;
+        std::cout << "W: " << w.value() << " MSE: " << mse.value() << " Gradient: " << w.partials() << std::endl;
+
+        
+        float gradient = w.partials();
+        w = createVariable(w.value() - alpha * gradient);
     }
 }
+
+// int main() {
+//     Variable x = createMatrixVariable<2, 2>({1, 2, 3, 4});
+//     Matrix<float, 2, 2> y({1, 2, 3, 4});
+
+//     Variable z = matmul(x, y);
+
+//     for(float item : z.value()) std::cout << item << ' ';
+// }

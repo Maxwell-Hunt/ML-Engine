@@ -1,122 +1,256 @@
 #ifndef __OPERATIONS__
 #define __OPERATIONS__
 
-#include <vector>
-#include <memory>
-#include "context.h"
 #include "expression.h"
+#include "defs.h"
 
-namespace Internal {
+#include <cmath>
+#include <numeric>
+#include <initializer_list>
 
-class ReductionOperation : public Expression {
-public:
-    virtual ~ReductionOperation() = default;
+template <typename T>
+class ConstExpression : public Expression<T> {
+friend Variable<T> createVariable<>(T value);
+
+template <std::size_t ...Dims>
+friend Variable<Tensor<float, Dims...>> createTensorVariable();
+
+template <std::size_t ...Dims>
+friend Variable<Tensor<float, Dims...>> createRandomTensorVariable();
+
+template <std::size_t ...Dims>
+friend Variable<Tensor<float, Dims...>> createTensorVariable(std::initializer_list<float> items);
+
+template <std::size_t rows, std::size_t cols>
+friend Variable<Matrix<float, rows, cols>> createMatrixVariable(std::initializer_list<float> items);
+
+private:
+    ConstExpression(T&& value) : Expression<T>(std::move(value)) {}
+    virtual ExpressionBase::Children children() const final override { return {}; }
+    virtual void updatePartials() final override {}
+};
+
+template <typename T>
+class UnaryExpression : public Expression<T> {
 protected:
-    ReductionOperation(std::vector<std::shared_ptr<Expression>>&& data, float value);
-    std::vector<std::shared_ptr<Expression>> data;
+    UnaryExpression(std::shared_ptr<Expression<T>> subexpr, T&& value) : 
+        Expression<T>{std::move(value)},
+        subexpr{std::move(subexpr)}
+        {}
 private:
-    virtual std::vector<std::shared_ptr<Expression>> children() const override;
-};
+    virtual ExpressionBase::Children children() const final override { return {subexpr.get(), nullptr}; }
 
-class BinaryOperation : public Expression {
-public:
-    virtual ~BinaryOperation() = default;
 protected:
-    BinaryOperation(const std::shared_ptr<Expression>& e1, const std::shared_ptr<Expression>& e2, float value);
-    std::shared_ptr<Expression> e1;
-    std::shared_ptr<Expression> e2;
-private:
-    virtual std::vector<std::shared_ptr<Expression>> children() const override;
+    std::shared_ptr<Expression<T>> subexpr;
 };
 
-class UnaryOperation : public Expression {
-public:
-    virtual ~UnaryOperation() = default;
+template <typename T, typename H, typename Result>
+class BinaryExpression : public Expression<Result> {
 protected:
-    UnaryOperation(const std::shared_ptr<Expression>& subexpr, float value);
-    std::shared_ptr<Expression> subexpr;
+    BinaryExpression(std::shared_ptr<Expression<T>> a, std::shared_ptr<Expression<H>> b, Result&& value) :
+        Expression<Result>{std::move(value)},
+        childA{std::move(a)},
+        childB{std::move(b)}
+        {}
 private:
-    virtual std::vector<std::shared_ptr<Expression>> children() const override;
+    virtual ExpressionBase::Children children() const final override { return {childA.get(), childB.get()}; }
+protected:
+    std::shared_ptr<Expression<T>> childA;
+    std::shared_ptr<Expression<H>> childB;
 };
 
-class Addition : public BinaryOperation {
-friend Engine::Expression Engine::add(const Engine::Expression& e1, const Engine::Expression& e2);
-friend Engine::Expression Engine::add(float val, const Engine::Expression& e2);
-friend Engine::Expression Engine::add(const Engine::Expression& e1, float val);
+// TODO: There is a good amount of repeated code between this class
+// and UnaryExpression.  Think about how this can be fixed
+template <TensorType T, Floating F>
+class ReductionExpression : public Expression<F> {
+protected:
+    ReductionExpression(std::shared_ptr<Expression<T>> subexpr, F&& value) : 
+        Expression<F>{std::move(value)},
+        subexpr{std::move(subexpr)}
+        {}
 private:
-    Addition(const std::shared_ptr<Expression>& e1, const std::shared_ptr<Expression>& e2);
-    virtual void updatePartials() override;
+    virtual ExpressionBase::Children children() const final override { return {subexpr.get(), nullptr}; }
+
+protected:
+    std::shared_ptr<Expression<T>> subexpr;
 };
 
-class Subtraction : public BinaryOperation {
-friend Engine::Expression Engine::sub(const Engine::Expression& e1, const Engine::Expression& e2);
-friend Engine::Expression Engine::sub(float val, const Engine::Expression& e2);
-friend Engine::Expression Engine::sub(const Engine::Expression& e1, float val);
+template <typename T>
+class Square : public UnaryExpression<T> {
+friend Variable<T> square<>(const Variable<T>& v);
 private:
-    Subtraction(const std::shared_ptr<Expression>& e1, const std::shared_ptr<Expression>& e2);
-    virtual void updatePartials() override;
+    Square(std::shared_ptr<Expression<T>> subexpr) : 
+        UnaryExpression<T>{subexpr, subexpr->value() * subexpr->value()} {}
+
+    virtual void updatePartials() override {
+        this->addToPartial(this->subexpr, 2.f * this->subexpr->value() * this->partials());
+    }
 };
 
-class Multiplication : public BinaryOperation {
-friend Engine::Expression Engine::mult(const Engine::Expression& e1, const Engine::Expression& e2);
-friend Engine::Expression Engine::mult(float val, const Engine::Expression& e2);
-friend Engine::Expression Engine::mult(const Engine::Expression& e1, float val);
+template <typename T>
+class Exp : public UnaryExpression<T> {
+friend Variable<T> exp<>(const Variable<T>& v);
 private:
-    Multiplication(const std::shared_ptr<Expression>& e1, const std::shared_ptr<Expression>& e2);
-    virtual void updatePartials() override;
+    T findValue(const std::shared_ptr<Expression<T>>& subexpr) const requires TensorType<T> {
+        return subexpr->value().map([](const auto& x) { return std::exp(x); });
+    }
+
+    T findValue(const std::shared_ptr<Expression<T>>& subexpr) const requires Floating<T> {
+        return std::exp(subexpr->value());
+    }
+
+    Exp(std::shared_ptr<Expression<T>> subexpr) :
+        UnaryExpression<T>{subexpr, findValue(subexpr)} {}
+
+    virtual void updatePartials() override {
+        this->addToPartial(this->subexpr, this->value() * this->partials());
+    }
 };
 
-class Division : public BinaryOperation {
-friend Engine::Expression Engine::div(const Engine::Expression& e1, const Engine::Expression& e2);
-friend Engine::Expression Engine::div(float val, const Engine::Expression& e2);
-friend Engine::Expression Engine::div(const Engine::Expression& e1, float val);
+template <typename T, typename H>
+class Addition : public BinaryExpression<T, H, T> {
+    friend Variable<T> operator+<>(const Variable<T>& a, const Variable<H>& b);
 private:
-    Division(const std::shared_ptr<Expression>& e1, const std::shared_ptr<Expression>& e2);
-    virtual void updatePartials() override;
+    Addition(std::shared_ptr<Expression<T>> a, std::shared_ptr<Expression<H>> b) :
+        BinaryExpression<T, H, T>{a, b, a->value() + b->value()} {}
+
+    void updatePartialsHelper() requires TensorType<T> {
+        this->addToPartial(this->childA, this->partials());
+        this->addToPartial(this->childB, this->partials().template narrowCast<H>());
+    }
+
+    void updatePartialsHelper() requires Floating<T> {
+        this->addToPartial(this->childA, this->partials());
+        this->addToPartial(this->childB, this->partials());
+    }
+
+    virtual void updatePartials() override {
+        updatePartialsHelper();
+    }
 };
 
-class Square : public UnaryOperation {
-friend Engine::Expression Engine::square(const Engine::Expression& ex);
+template <typename T, typename H>
+class Subtraction : public BinaryExpression<T, H, T> {
+    friend Variable<T> operator-<>(const Variable<T>& a, const Variable<H>& b);
 private:
-    Square(const std::shared_ptr<Expression>& subexpr);
-    virtual void updatePartials() override;
+    Subtraction(std::shared_ptr<Expression<T>> a, std::shared_ptr<Expression<H>> b) :
+        BinaryExpression<T, H, T>{a, b, a->value() - b->value()} {}
+
+    void updatePartialsHelper() requires TensorType<T> {
+        this->addToPartial(this->childA, this->partials());
+        this->addToPartial(this->childB, this->partials().template narrowCast<H>() * -1);
+    }
+
+    void updatePartialsHelper() requires Floating<T> {
+        this->addToPartial(this->childA, this->partials());
+        this->addToPartial(this->childB, this->partials() * -1);
+    }
+
+    virtual void updatePartials() override {
+        updatePartialsHelper();
+    }
 };
 
-class Sigmoid : public UnaryOperation {
-friend Engine::Expression Engine::sigmoid(const Engine::Expression& ex);
+template <typename T, typename H, typename Result>
+class Multiplication : public BinaryExpression<T, H, Result> {
+    template <typename U, typename V>
+    friend Variable<V> operator*(const Variable<U>& a, const Variable<V>& b) requires (Floating<U> && TensorType<V>);
+    template <typename U, typename V>
+    friend Variable<U> operator*(const Variable<U>& a, const Variable<V>& b) requires (!Floating<U> || !TensorType<V>);
 private:
-    Sigmoid(const std::shared_ptr<Expression>& subexpr);
-    virtual void updatePartials() override;
+    Multiplication(std::shared_ptr<Expression<T>> a, std::shared_ptr<Expression<H>> b) :
+        BinaryExpression<T, H, Result>{a, b, a->value() * b->value()} {}
+
+    void updatePartialsHelper() requires (TensorType<T> && TensorType<H>) {
+        this->addToPartial(this->childA, this->partials() * this->childB->value());
+        this->addToPartial(this->childB, (this->partials() * this->childA->value()).template narrowCast<H>());
+    }
+
+    void updatePartialsHelper() requires (TensorType<T> && Floating<H>) {
+        this->addToPartial(this->childA, this->partials() * this->childB->value());
+        auto A = this->partials() * this->childA->value();
+        this->addToPartial(this->childB, std::accumulate(A.begin(), A.end(), static_cast<H>(0)));
+    }
+
+    void updatePartialsHelper() requires (Floating<T> && TensorType<H>) {
+        auto B = this->partials() * this->childB->value();
+        this->addToPartial(this->childA, std::accumulate(B.begin(), B.end(), static_cast<H>(0)));
+        this->addToPartial(this->childB, this->partials() * this->childA->value());
+    }
+
+    void updatePartialsHelper() requires (Floating<T> && Floating<H>) {
+        this->addToPartial(this->childA, this->partials() * this->childB->value());
+        this->addToPartial(this->childB, this->partials() * this->childA->value());
+    }
+    
+    virtual void updatePartials() override {
+        updatePartialsHelper();
+    }
 };
 
-class Relu : public UnaryOperation {
-friend Engine::Expression Engine::relu(const Engine::Expression& ex);
+template <typename T, typename H>
+class Division : public BinaryExpression<T, H, T> {
+    friend Variable<T> operator/<>(const Variable<T>& a, const Variable<H>& b);
 private:
-    Relu(const std::shared_ptr<Expression>& subexpr);
-    virtual void updatePartials();
+    Division(std::shared_ptr<Expression<T>> a, std::shared_ptr<Expression<H>> b) :
+        BinaryExpression<T, H, T>{a, b, a->value() / b->value()} {}
+
+    void updatePartialsHelper() requires TensorType<T> {
+        H reciporicalB;
+        std::transform(
+            this->childB->value().begin(),
+            this->childB->value().end(),
+            reciporicalB.begin(),
+            [](float v) { return 1.0 / v; });
+
+        // d/dx (x/y) = 1/y
+        this->addToPartial(this->childA, this->partials() * reciporicalB);
+
+        // d/dy (x/y) = -x / y^2
+        T intermediate = this->partials() * -1 * this->childA->value() * reciporicalB * reciporicalB;
+        this->addToPartial(this->childB, intermediate.template narrowCast<H>());
+    }
+
+    void updatePartialsHelper() requires Floating<T> {
+        this->addToPartial(this->childA, this->partials() * 1 / this->childB->value());
+
+        T negRecipSquared = -1 / (this->childB->value() * this->childB->value());
+        this->addToPartial(this->childB, this->partials() * this->childA->value() * negRecipSquared);
+    }
+
+    virtual void updatePartials() override {
+        updatePartialsHelper();
+    }
 };
 
-class Exp : public UnaryOperation {
-friend Engine::Expression Engine::exp(const Engine::Expression& ex);
+template <typename MatrixA, typename MatrixB>
+class MatMul : public BinaryExpression<MatrixA, MatrixB, decltype(std::declval<MatrixA>().matmul(std::declval<MatrixB>()))> {
+public:
+    using ResultType = decltype(std::declval<MatrixA>().matmul(std::declval<MatrixB>()));
+    friend Variable<ResultType> matmul<>(const Variable<MatrixA>& a, const Variable<MatrixB>& b);
 private:
-    Exp(const std::shared_ptr<Expression>& subexpr);
-    virtual void updatePartials() override;
+    MatMul(std::shared_ptr<Expression<MatrixA>> a, std::shared_ptr<Expression<MatrixB>> b) :
+        BinaryExpression<MatrixA, MatrixB, ResultType>{a, b, a->value().matmul(b->value())} {}
+    
+    virtual void updatePartials() override {
+        this->addToPartial(this->childA, this->partials().matmulTransposedOther(this->childB->value()));
+        this->addToPartial(this->childB, this->childA->value().transposeMatmul(this->partials()));
+    }
 };
 
-class Log : public UnaryOperation {
-friend Engine::Expression Engine::log(const Engine::Expression& ex);
+template <TensorType T, Floating F>
+class ReduceAdd : public ReductionExpression<T, F> {
+friend Variable<float> reduceAdd<>(const Variable<T>& t);
 private:
-    Log(const std::shared_ptr<Expression>& subexpr);
-    virtual void updatePartials() override;
-};
+    ReduceAdd(std::shared_ptr<Expression<T>> subexpr) :
+        ReductionExpression<T, F>(subexpr, 
+            std::accumulate(subexpr->value().begin(),
+                            subexpr->value().end(),
+                            static_cast<F>(0))) {}
 
-class ReduceAdd : public ReductionOperation {
-friend Engine::Expression Engine::reduceAdd(const Tensor<Engine::Expression>& expressions);
-private:
-    ReduceAdd(std::vector<std::shared_ptr<Expression>>&& data);
-    virtual void updatePartials() override;
+    virtual void updatePartials() override final {
+        this->addToPartial(this->subexpr, this->partials());
+    }
 };
-
-}
 
 #endif

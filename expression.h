@@ -1,78 +1,99 @@
 #ifndef __EXPRESSION__
 #define __EXPRESSION__
 
-#include <memory>
-#include <stack>
 #include <vector>
+#include <memory>
 #include <unordered_set>
+#include <stack>
+#include <iostream>
+#include "tensor.h"
 
-#include "context.h"
+template <typename T>
+concept Floating = std::is_floating_point<T>::value;
 
-namespace Internal {
+template <typename T>
+class Variable;
 
-class Expression : public std::enable_shared_from_this<Expression> {
-friend void Engine::computeGradients(const Engine::Expression& target);
-public:
-    virtual ~Expression() = default;
-    float getValue() { return value; }
-    virtual float getPartial() const { return partial; }
-
+// The reasoning behind having this ExpressionBase is that we don't necessarily
+// know the shape of the tensors of the children of any given Expression and
+// so we don't know the templates for its type.
+class ExpressionBase {
+template <typename T>
+friend void computeGradients(const Variable<T>& ex);
 protected:
-    Expression(float value) : value{value}, partial{0} {}
-    void addToPartial(Expression& other, float value) const { other.partial += value; }
+    using Children = std::pair<ExpressionBase*, ExpressionBase*>;
+    virtual Children children() const = 0;
 private:
-    void backPropagate() {
-        partial = 1;
-        std::stack<std::shared_ptr<Expression>> s;
-        std::unordered_set<std::shared_ptr<Expression>> visited;
+    virtual void updatePartials() = 0;
+    virtual void initializeGradients() = 0;
 
-        buildTopo(shared_from_this(), s, visited);
+    void backPropagate() {
+        initializeGradients();
+        std::stack<ExpressionBase*> s;
+        std::unordered_set<ExpressionBase*> visited;
+
+        buildTopo(this, s, visited);
 
         while(!s.empty()) {
-            std::shared_ptr<Expression> ex = s.top(); s.pop();
+            ExpressionBase* ex = s.top(); s.pop();
             ex->updatePartials();
         }
     }
 
-    void buildTopo(const std::shared_ptr<Expression>& ex, std::stack<std::shared_ptr<Expression>>& s, std::unordered_set<std::shared_ptr<Expression>>& visited) const {
+    void buildTopo(ExpressionBase* ex, std::stack<ExpressionBase*>& s, std::unordered_set<ExpressionBase*>& visited) const {
         if(visited.count(ex)) return;
         visited.insert(ex);
-        for(const std::shared_ptr<Expression>& next : ex->children()) {
-            buildTopo(next, s, visited);
-        }
+        
+        // Vist children (there should not be more than 2 of them) 
+        Children c = ex->children();
+        if(c.first)  buildTopo(c.first, s, visited);
+        if(c.second) buildTopo(c.second, s, visited);
+
         s.push(ex);
     }
-
-    virtual void updatePartials() = 0;
-    virtual std::vector<std::shared_ptr<Expression>> children() const = 0;
-    float value;
-    float partial;
 };
 
-}
-
-namespace Engine {
-
-class Expression {
+template <typename T>
+class Expression : public ExpressionBase {
 public:
-    Expression() : expr{nullptr} {}
-    Expression(Internal::Expression* expr) : expr{expr} {}
+    virtual ~Expression() = default;
+    const T& value() const { return _data; }
+    const T& partials() const { return _gradients; }
 
-    Expression(const Expression& expr) = delete;
-    Expression(Expression&& expr) noexcept : expr{(expr.expr)} {}
+    // I would like to not expose this function if possible but for now
+    // it shall remain this way
+    void setPartials(const T& updated) {
+        _gradients = updated;
+    }
+protected:
+    Expression(T&& value) : _data{std::move(value)} {
+        _gradients = 0.f;
+    }
 
-    Expression& operator=(const Expression&) = delete;
-    Expression& operator=(Expression&& expr) { this->expr = std::move(expr.expr); return *this; }
-
-    float getValue() const { return expr->getValue(); }
-    float getPartial() const { return expr->getPartial(); }
-    std::shared_ptr<Internal::Expression> getData() const { return expr; }
+    template <typename H, typename K>
+    void addToPartial(const std::shared_ptr<Expression<H>>& ex, const K& value) {
+        ex->setPartials(ex->partials() + value);
+    }
 
 private:
-    std::shared_ptr<Internal::Expression> expr;
+    virtual void initializeGradients() override final {
+        _gradients = 1;
+    }
+
+    T _data;
+    T _gradients;
 };
 
-}
+template <typename T>
+class Variable {
+public:
+    Variable(Expression<T>* data) : _data{std::shared_ptr<Expression<T>>(data)} {}
+    const T& value() const { return _data->value(); }
+    const T& partials() const { return _data->partials(); }
+    std::shared_ptr<Expression<T>> get() const { return _data; }
+private:
+    std::shared_ptr<Expression<T>> _data;
+};
 
 
 #endif

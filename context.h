@@ -74,6 +74,18 @@ Variable<T> operator*(const Variable<T>& a, const Variable<H>& b) requires (!Flo
 }
 
 template <typename T, typename H>
+auto operator*(const Variable<T>& a, const H& b) {
+    Variable<H> v = createVariable(b);
+    return a * v;
+}
+
+template <typename T, typename H>
+auto operator*(const T& a, const Variable<H>& b) {
+    Variable<T> v = createVariable(a);
+    return v * b;
+}
+
+template <typename T, typename H>
 Variable<T> operator/(const Variable<T>& a, const Variable<H>& b) {
     return Variable(new Division<T, H>(a.get(), b.get()));
 }
@@ -81,6 +93,18 @@ Variable<T> operator/(const Variable<T>& a, const Variable<H>& b) {
 template <typename MatrixA, typename MatrixB>
 Variable<typename MatMul<MatrixA, MatrixB>::ResultType> matmul(const Variable<MatrixA>& a, const Variable<MatrixB>& b) {
     return Variable(new MatMul<MatrixA, MatrixB>(a.get(), b.get()));
+}
+
+template <typename MatrixA, typename MatrixB>
+auto matmul(const Variable<MatrixA>& a, const MatrixB& b) {
+    Variable<MatrixB> v = createVariable(b);
+    return matmul(a, v);
+}
+
+template <typename MatrixA, typename MatrixB>
+auto matmul(const MatrixA& a, const Variable<MatrixB>& b) {
+    Variable<MatrixA> v = createVariable(a);
+    return matmul(b, a);
 }
 
 template <TensorType T>

@@ -5,6 +5,11 @@
 #include <random>
 #include <stdexcept>
 
+// TODO: Note that currently, in all of the operators which go between
+//       variable and constant expression, we're creating a copy of the
+//       constant variable.  This is probably not ideal and may slow down
+//       the resulting program significantly.
+
 template <typename T>
 Variable<T> createVariable(T value) {
     return Variable(new ConstExpression(std::move(value)));
@@ -59,8 +64,32 @@ Variable<T> operator+(const Variable<T>& a, const Variable<H>& b) {
 }
 
 template <typename T, typename H>
+auto operator+(const Variable<T>& a, const H& b) {
+    Variable<H> v = createVariable(b);
+    return a + v;
+}
+
+template <typename T, typename H>
+auto operator+(const T& a, const Variable<H>& b) {
+    Variable<T> v = createVariable(a);
+    return v + b;
+}
+
+template <typename T, typename H>
 Variable<T> operator-(const Variable<T>& a, const Variable<H>& b) {
     return Variable(new Subtraction<T, H>(a.get(), b.get()));
+}
+
+template <typename T, typename H>
+auto operator-(const Variable<T>& a, const H& b) {
+    Variable<H> v = createVariable(b);
+    return a - v;
+}
+
+template <typename T, typename H>
+auto operator-(const T& a, const Variable<H>& b) {
+    Variable<T> v = createVariable(a);
+    return v - b;
 }
 
 template <typename T, typename H>
@@ -88,6 +117,18 @@ auto operator*(const T& a, const Variable<H>& b) {
 template <typename T, typename H>
 Variable<T> operator/(const Variable<T>& a, const Variable<H>& b) {
     return Variable(new Division<T, H>(a.get(), b.get()));
+}
+
+template <typename T, typename H>
+auto operator/(const Variable<T>& a, const H& b) {
+    Variable<H> v = createVariable(b);
+    return a / v;
+}
+
+template <typename T, typename H>
+auto operator/(const T& a, const Variable<H>& b) {
+    Variable<T> v = createVariable(a);
+    return v / b;
 }
 
 template <typename MatrixA, typename MatrixB>

@@ -5,7 +5,8 @@
 #include <random>
 #include <stdexcept>
 
-Variable<float> createScalarVariable(float value) {
+template <typename T>
+Variable<T> createVariable(T value) {
     return Variable(new ConstExpression(std::move(value)));
 }
 

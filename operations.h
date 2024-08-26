@@ -10,7 +10,7 @@
 
 template <typename T>
 class ConstExpression : public Expression<T> {
-friend Variable<float> createScalarVariable(float value);
+friend Variable<T> createVariable<>(T value);
 
 template <std::size_t ...Dims>
 friend Variable<Tensor<float, Dims...>> createTensorVariable();

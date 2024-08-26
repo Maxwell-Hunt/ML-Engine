@@ -169,12 +169,12 @@ private:
     void updatePartialsHelper() requires (TensorType<T> && Floating<H>) {
         this->addToPartial(this->childA, this->partials() * this->childB->value());
         auto A = this->partials() * this->childA->value();
-        this->addToPartial(this->childB, std::accumulate(A.begin(), A.end(), 0));
+        this->addToPartial(this->childB, std::accumulate(A.begin(), A.end(), static_cast<H>(0)));
     }
 
     void updatePartialsHelper() requires (Floating<T> && TensorType<H>) {
         auto B = this->partials() * this->childB->value();
-        this->addToPartial(this->childA, std::accumulate(B.begin(), B.end(), 0));
+        this->addToPartial(this->childA, std::accumulate(B.begin(), B.end(), static_cast<H>(0)));
         this->addToPartial(this->childB, this->partials() * this->childA->value());
     }
 

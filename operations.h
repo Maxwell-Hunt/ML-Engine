@@ -243,16 +243,10 @@ class ReduceAdd : public ReductionExpression<T, F> {
 friend Variable<float> reduceAdd<>(const Variable<T>& t);
 private:
     ReduceAdd(std::shared_ptr<Expression<T>> subexpr) :
-        ReductionExpression<T, F>(subexpr, helper(subexpr)) {}
-    
-    // TODO: Why does this not work if I use std::accumulate
-    F helper(std::shared_ptr<Expression<T>> s) const {
-        F result = 0;
-        for(const F& item : s->value()) {
-            result = result + item;
-        }
-        return result;
-    }
+        ReductionExpression<T, F>(subexpr, 
+            std::accumulate(subexpr->value().begin(),
+                            subexpr->value().end(),
+                            static_cast<F>(0))) {}
 
     virtual void updatePartials() override final {
         this->addToPartial(this->subexpr, this->partials());
